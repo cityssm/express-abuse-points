@@ -43,9 +43,6 @@ export const initialize = (options_user?: types.AbuseCheckOptions) => {
 
 
 const clearExpiredAbuse = () => {
-
-  console.log("clear");
-
   if (options.byIP) {
     db.run("DELETE FROM " + TABLENAME_IP +
       " WHERE expiryTimeMillis <= ?",
