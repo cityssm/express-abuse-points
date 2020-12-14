@@ -14,6 +14,7 @@ const trackingValues = require("./trackingValues");
 const sqlite3 = require("sqlite3");
 const OPTIONS_DEFAULT = {
     "byIP": true,
+    "abusePoints": 1,
     "expiryMillis": 5 * 60 * 1000,
     "abusePointsMax": 10,
     "clearIntervalMillis": 60 * 60 * 1000
@@ -80,9 +81,8 @@ const isAbuser = (req) => __awaiter(void 0, void 0, void 0, function* () {
     return false;
 });
 exports.isAbuser = isAbuser;
-const recordAbuse = (req, abusePoints, expiryMillis) => {
-    const expiryTimeMillis = Date.now() +
-        (expiryMillis || options.expiryMillis);
+const recordAbuse = (req, abusePoints = options.abusePoints, expiryMillis = options.expiryMillis) => {
+    const expiryTimeMillis = Date.now() + expiryMillis;
     if (options.byIP) {
         const ipAddress = trackingValues.getIP(req);
         db.run("INSERT INTO " + TABLENAME_IP + " " + TABLECOLUMNS_INSERT + " values (?, ?, ?)", ipAddress, expiryTimeMillis, abusePoints);

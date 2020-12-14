@@ -8,10 +8,15 @@ describe("express-abuse-points", async() => {
     "ip": "127.0.0.1"
   };
 
-  abusePoints.initialize({
-    "abusePointsMax": 10,
-    "expiryMillis": 10000,
-    "clearIntervalMillis": 5000
+  before((done) => {
+    abusePoints.initialize({
+      "abusePointsMax": 10,
+      "expiryMillis": 10000,
+      "clearIntervalMillis": 5000
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-implied-eval
+    setTimeout(done, 1000);
   });
 
   it("Has access initially", async() => {
@@ -54,4 +59,19 @@ describe("express-abuse-points", async() => {
     assert.strictEqual(isAbuser, false);
   });
 
+
+  it("Records abuse record with using all defaults", () => {
+
+    abusePoints.recordAbuse(fakeRequest);
+
+    assert.ok("success");
+  });
+
+
+  it("Records abuse record with using no defaults", () => {
+
+    abusePoints.recordAbuse(fakeRequest, 4, 1000);
+
+    assert.ok("success");
+  });
 });

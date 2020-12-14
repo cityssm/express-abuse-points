@@ -1,6 +1,7 @@
 export interface AbuseCheckOptions {
   byIP?: boolean;
 
+  abusePoints?: number;
   expiryMillis?: number;
   abusePointsMax?: number;
 

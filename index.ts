@@ -7,7 +7,10 @@ import * as sqlite3 from "sqlite3";
 
 const OPTIONS_DEFAULT: types.AbuseCheckOptions = {
   "byIP": true,
+
+  "abusePoints": 1,
   "expiryMillis": 5 * 60 * 1000,
+
   "abusePointsMax": 10,
   "clearIntervalMillis": 60 * 60 * 1000
 };
@@ -119,15 +122,16 @@ export const isAbuser = async(req: types.AbuseRequest) => {
 /**
  * Adds a new abuse record.
  */
-export const recordAbuse = (req: types.AbuseRequest, abusePoints: number, expiryMillis?: number) => {
+export const recordAbuse = (req: types.AbuseRequest, abusePoints: number = options.abusePoints, expiryMillis: number = options.expiryMillis) => {
 
-  const expiryTimeMillis = Date.now() +
-    (expiryMillis || options.expiryMillis);
+  const expiryTimeMillis = Date.now() + expiryMillis;
 
   if (options.byIP) {
     const ipAddress = trackingValues.getIP(req);
     db.run("INSERT INTO " + TABLENAME_IP + " " + TABLECOLUMNS_INSERT + " values (?, ?, ?)",
-      ipAddress, expiryTimeMillis, abusePoints);
+      ipAddress,
+      expiryTimeMillis,
+      abusePoints);
   }
 };
 
