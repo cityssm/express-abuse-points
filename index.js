@@ -14,6 +14,7 @@ const trackingValues = require("./trackingValues");
 const sqlite3 = require("sqlite3");
 const OPTIONS_DEFAULT = {
     "byIP": true,
+    "byXForwardedFor": false,
     "abusePoints": 1,
     "expiryMillis": 5 * 60 * 1000,
     "abusePointsMax": 10,
@@ -21,6 +22,7 @@ const OPTIONS_DEFAULT = {
 };
 Object.freeze(OPTIONS_DEFAULT);
 const TABLENAME_IP = "AbusePoints_IP";
+const TABLENAME_XFORWARDEDFOR = "AbusePoints_XForwardedFor";
 const TABLECOLUMNS_CREATE = "(trackingValue TEXT, expiryTimeMillis INT UNSIGNED, abusePoints TINYINT UNSIGNED)";
 const TABLECOLUMNS_INSERT = "(trackingValue, expiryTimeMillis, abusePoints)";
 let options = OPTIONS_DEFAULT;
@@ -33,12 +35,20 @@ const initialize = (options_user) => {
             db.run("CREATE TABLE IF NOT EXISTS " + TABLENAME_IP +
                 " " + TABLECOLUMNS_CREATE);
         }
+        if (options.byXForwardedFor) {
+            db.run("CREATE TABLE IF NOT EXISTS " + TABLENAME_XFORWARDEDFOR +
+                " " + TABLECOLUMNS_CREATE);
+        }
     }
 };
 exports.initialize = initialize;
 const clearExpiredAbuse = () => {
     if (options.byIP) {
         db.run("DELETE FROM " + TABLENAME_IP +
+            " WHERE expiryTimeMillis <= ?", Date.now());
+    }
+    if (options.byXForwardedFor) {
+        db.run("DELETE FROM " + TABLENAME_XFORWARDEDFOR +
             " WHERE expiryTimeMillis <= ?", Date.now());
     }
 };
@@ -67,6 +77,12 @@ const clearAbuse = (req) => {
         const ipAddress = trackingValues.getIP(req);
         clearAbusePoints(TABLENAME_IP, ipAddress);
     }
+    if (options.byXForwardedFor) {
+        const ipAddress = trackingValues.getXForwardedFor(req);
+        if (ipAddress !== "") {
+            clearAbusePoints(TABLENAME_XFORWARDEDFOR, ipAddress);
+        }
+    }
 };
 exports.clearAbuse = clearAbuse;
 const isAbuser = (req) => __awaiter(void 0, void 0, void 0, function* () {
@@ -77,6 +93,15 @@ const isAbuser = (req) => __awaiter(void 0, void 0, void 0, function* () {
             return true;
         }
     }
+    if (options.byXForwardedFor) {
+        const ipAddress = trackingValues.getXForwardedFor(req);
+        if (ipAddress !== "") {
+            const abusePoints = yield getAbusePoints(TABLENAME_XFORWARDEDFOR, ipAddress);
+            if (abusePoints >= options.abusePointsMax) {
+                return true;
+            }
+        }
+    }
     return false;
 });
 exports.isAbuser = isAbuser;
@@ -85,6 +110,12 @@ const recordAbuse = (req, abusePoints = options.abusePoints, expiryMillis = opti
     if (options.byIP) {
         const ipAddress = trackingValues.getIP(req);
         db.run("INSERT INTO " + TABLENAME_IP + " " + TABLECOLUMNS_INSERT + " values (?, ?, ?)", ipAddress, expiryTimeMillis, abusePoints);
+    }
+    if (options.byXForwardedFor) {
+        const ipAddress = trackingValues.getXForwardedFor(req);
+        if (ipAddress !== "") {
+            db.run("INSERT INTO " + TABLENAME_XFORWARDEDFOR + " " + TABLECOLUMNS_INSERT + " values (?, ?, ?)", ipAddress, expiryTimeMillis, abusePoints);
+        }
     }
 };
 exports.recordAbuse = recordAbuse;

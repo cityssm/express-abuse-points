@@ -7,17 +7,19 @@ import * as sqlite3 from "sqlite3";
 
 const OPTIONS_DEFAULT: types.AbuseCheckOptions = {
   "byIP": true,
+  "byXForwardedFor": false,
 
   "abusePoints": 1,
-  "expiryMillis": 5 * 60 * 1000,
+  "expiryMillis": 5 * 60 * 1000, // 5 minutes
 
   "abusePointsMax": 10,
-  "clearIntervalMillis": 60 * 60 * 1000
+  "clearIntervalMillis": 60 * 60 * 1000 // 1 hour
 };
 Object.freeze(OPTIONS_DEFAULT);
 
 
 const TABLENAME_IP = "AbusePoints_IP";
+const TABLENAME_XFORWARDEDFOR = "AbusePoints_XForwardedFor";
 
 const TABLECOLUMNS_CREATE = "(trackingValue TEXT, expiryTimeMillis INT UNSIGNED, abusePoints TINYINT UNSIGNED)";
 const TABLECOLUMNS_INSERT = "(trackingValue, expiryTimeMillis, abusePoints)";
@@ -38,6 +40,11 @@ export const initialize = (options_user?: types.AbuseCheckOptions) => {
       db.run("CREATE TABLE IF NOT EXISTS " + TABLENAME_IP +
         " " + TABLECOLUMNS_CREATE);
     }
+
+    if (options.byXForwardedFor) {
+      db.run("CREATE TABLE IF NOT EXISTS " + TABLENAME_XFORWARDEDFOR +
+        " " + TABLECOLUMNS_CREATE);
+    }
   }
 };
 
@@ -48,10 +55,16 @@ const clearExpiredAbuse = () => {
       " WHERE expiryTimeMillis <= ?",
       Date.now());
   }
+
+  if (options.byXForwardedFor) {
+    db.run("DELETE FROM " + TABLENAME_XFORWARDEDFOR +
+      " WHERE expiryTimeMillis <= ?",
+      Date.now());
+  }
 };
 
 
-const getAbusePoints = async(tableName: string, trackingValue: string) => {
+const getAbusePoints = async (tableName: string, trackingValue: string) => {
 
   return await new Promise((resolve, reject) => {
 
@@ -94,21 +107,43 @@ export const clearAbuse = (req: types.AbuseRequest) => {
     const ipAddress = trackingValues.getIP(req);
     clearAbusePoints(TABLENAME_IP, ipAddress);
   }
+
+  if (options.byXForwardedFor) {
+    const ipAddress = trackingValues.getXForwardedFor(req);
+
+    if (ipAddress !== "") {
+      clearAbusePoints(TABLENAME_XFORWARDEDFOR, ipAddress);
+    }
+  }
 };
 
 
 /**
  * Checks if the current requestor is considered from an abusive source.
  */
-export const isAbuser = async(req: types.AbuseRequest) => {
+export const isAbuser = async (req: types.AbuseRequest) => {
 
   if (options.byIP) {
+
     const ipAddress = trackingValues.getIP(req);
 
     const abusePoints = await getAbusePoints(TABLENAME_IP, ipAddress);
 
     if (abusePoints >= options.abusePointsMax) {
       return true;
+    }
+  }
+
+  if (options.byXForwardedFor) {
+
+    const ipAddress = trackingValues.getXForwardedFor(req);
+
+    if (ipAddress !== "") {
+      const abusePoints = await getAbusePoints(TABLENAME_XFORWARDEDFOR, ipAddress);
+
+      if (abusePoints >= options.abusePointsMax) {
+        return true;
+      }
     }
   }
 
@@ -130,6 +165,17 @@ export const recordAbuse = (req: types.AbuseRequest, abusePoints: number = optio
       expiryTimeMillis,
       abusePoints);
   }
+
+  if (options.byXForwardedFor) {
+    const ipAddress = trackingValues.getXForwardedFor(req);
+
+    if (ipAddress !== "") {
+      db.run("INSERT INTO " + TABLENAME_XFORWARDEDFOR + " " + TABLECOLUMNS_INSERT + " values (?, ?, ?)",
+        ipAddress,
+        expiryTimeMillis,
+        abusePoints);
+    }
+  }
 };
 
 
@@ -142,7 +188,7 @@ export const abuseCheck = (options_user?: types.AbuseCheckOptions): express.Requ
 
   setInterval(clearExpiredAbuse, options.clearIntervalMillis);
 
-  const handler: express.RequestHandler = async(req, res, next) => {
+  const handler: express.RequestHandler = async (req, res, next) => {
 
     const isRequestAbuser = await isAbuser(req);
 

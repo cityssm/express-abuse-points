@@ -2,14 +2,19 @@ import * as assert from "assert";
 import * as abusePoints from "../index";
 
 
-describe("express-abuse-points", async() => {
+describe("express-abuse-points", () => {
 
   const fakeRequest = {
-    "ip": "127.0.0.1"
+    "ip": "127.0.0.1",
+    "headers": {
+      "x-forwarded-for": "192.168.0.1, 192.168.0.2, 192.168.0.3"
+    }
   };
 
   before((done) => {
     abusePoints.initialize({
+      "byIP": true,
+      "byXForwardedFor": true,
       "abusePointsMax": 10,
       "expiryMillis": 10000,
       "clearIntervalMillis": 5000
@@ -19,12 +24,14 @@ describe("express-abuse-points", async() => {
     setTimeout(done, 1000);
   });
 
-  it("Has access initially", async() => {
+
+  it("Has access initially", async () => {
     const isAbuser = await abusePoints.isAbuser(fakeRequest);
     assert.strictEqual(isAbuser, false);
   });
 
-  it("Still has access after one abuse record with less points than the max", async() => {
+
+  it("Still has access after one abuse record with less points than the max", async () => {
 
     abusePoints.recordAbuse(fakeRequest, 4);
 
@@ -33,7 +40,7 @@ describe("express-abuse-points", async() => {
   });
 
 
-  it("Still has access after two abuse records with less points than the max", async() => {
+  it("Still has access after two abuse records with less points than the max", async () => {
 
     abusePoints.recordAbuse(fakeRequest, 4);
 
@@ -42,7 +49,7 @@ describe("express-abuse-points", async() => {
   });
 
 
-  it("No longer has access after three abuse records summing more than the max", async() => {
+  it("No longer has access after three abuse records summing more than the max", async () => {
 
     abusePoints.recordAbuse(fakeRequest, 4);
 
@@ -51,7 +58,7 @@ describe("express-abuse-points", async() => {
   });
 
 
-  it("Regains access after clearing all records", async() => {
+  it("Regains access after clearing all records", async () => {
 
     abusePoints.clearAbuse(fakeRequest);
 

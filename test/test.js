@@ -11,12 +11,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const assert = require("assert");
 const abusePoints = require("../index");
-describe("express-abuse-points", () => __awaiter(void 0, void 0, void 0, function* () {
+describe("express-abuse-points", () => {
     const fakeRequest = {
-        "ip": "127.0.0.1"
+        "ip": "127.0.0.1",
+        "headers": {
+            "x-forwarded-for": "192.168.0.1, 192.168.0.2, 192.168.0.3"
+        }
     };
     before((done) => {
         abusePoints.initialize({
+            "byIP": true,
+            "byXForwardedFor": true,
             "abusePointsMax": 10,
             "expiryMillis": 10000,
             "clearIntervalMillis": 5000
@@ -55,4 +60,4 @@ describe("express-abuse-points", () => __awaiter(void 0, void 0, void 0, functio
         abusePoints.recordAbuse(fakeRequest, 4, 1000);
         assert.ok("success");
     });
-}));
+});

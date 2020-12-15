@@ -34,7 +34,11 @@ module.exports = {
     }],
     "@typescript-eslint/naming-convention": "off",
     "@typescript-eslint/semi": ["error", "always"],
-    "@typescript-eslint/space-before-function-paren": ["error", "never"],
+    "@typescript-eslint/space-before-function-paren": ["error", {
+      "anonymous": "never",
+      "named": "never",
+      "asyncArrow": "always"
+    }],
     "@typescript-eslint/strict-boolean-expressions": "off",
     "@typescript-eslint/quotes": ["error", "double"]
   }
