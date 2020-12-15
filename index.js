@@ -75,7 +75,9 @@ const clearAbusePoints = (tableName, trackingValue) => {
 const clearAbuse = (req) => {
     if (options.byIP) {
         const ipAddress = trackingValues.getIP(req);
-        clearAbusePoints(TABLENAME_IP, ipAddress);
+        if (ipAddress !== "") {
+            clearAbusePoints(TABLENAME_IP, ipAddress);
+        }
     }
     if (options.byXForwardedFor) {
         const ipAddress = trackingValues.getXForwardedFor(req);
@@ -88,9 +90,11 @@ exports.clearAbuse = clearAbuse;
 const isAbuser = (req) => __awaiter(void 0, void 0, void 0, function* () {
     if (options.byIP) {
         const ipAddress = trackingValues.getIP(req);
-        const abusePoints = yield getAbusePoints(TABLENAME_IP, ipAddress);
-        if (abusePoints >= options.abusePointsMax) {
-            return true;
+        if (ipAddress !== "") {
+            const abusePoints = yield getAbusePoints(TABLENAME_IP, ipAddress);
+            if (abusePoints >= options.abusePointsMax) {
+                return true;
+            }
         }
     }
     if (options.byXForwardedFor) {
@@ -109,7 +113,9 @@ const recordAbuse = (req, abusePoints = options.abusePoints, expiryMillis = opti
     const expiryTimeMillis = Date.now() + expiryMillis;
     if (options.byIP) {
         const ipAddress = trackingValues.getIP(req);
-        db.run("INSERT INTO " + TABLENAME_IP + " " + TABLECOLUMNS_INSERT + " values (?, ?, ?)", ipAddress, expiryTimeMillis, abusePoints);
+        if (ipAddress !== "") {
+            db.run("INSERT INTO " + TABLENAME_IP + " " + TABLECOLUMNS_INSERT + " values (?, ?, ?)", ipAddress, expiryTimeMillis, abusePoints);
+        }
     }
     if (options.byXForwardedFor) {
         const ipAddress = trackingValues.getXForwardedFor(req);

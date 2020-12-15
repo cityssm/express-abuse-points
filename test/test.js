@@ -42,16 +42,22 @@ describe("express-abuse-points", () => {
         const isAbuser = yield abusePoints.isAbuser(fakeRequest);
         assert.strictEqual(isAbuser, false);
     }));
-    it("No longer has access after three abuse records summing more than the max", () => __awaiter(void 0, void 0, void 0, function* () {
+    it("No longer has access after three abuse records summing more than the max", (done) => {
         abusePoints.recordAbuse(fakeRequest, 4);
-        const isAbuser = yield abusePoints.isAbuser(fakeRequest);
-        assert.strictEqual(isAbuser, true);
-    }));
-    it("Regains access after clearing all records", () => __awaiter(void 0, void 0, void 0, function* () {
+        setTimeout(() => __awaiter(void 0, void 0, void 0, function* () {
+            const isAbuser = yield abusePoints.isAbuser(fakeRequest);
+            assert.strictEqual(isAbuser, true);
+            done();
+        }), 500);
+    });
+    it("Regains access after clearing all records", (done) => {
         abusePoints.clearAbuse(fakeRequest);
-        const isAbuser = yield abusePoints.isAbuser(fakeRequest);
-        assert.strictEqual(isAbuser, false);
-    }));
+        setTimeout(() => __awaiter(void 0, void 0, void 0, function* () {
+            const isAbuser = yield abusePoints.isAbuser(fakeRequest);
+            assert.strictEqual(isAbuser, false);
+            done();
+        }), 500);
+    });
     it("Records abuse record with using all defaults", () => {
         abusePoints.recordAbuse(fakeRequest);
         assert.ok("success");

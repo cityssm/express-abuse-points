@@ -49,21 +49,29 @@ describe("express-abuse-points", () => {
   });
 
 
-  it("No longer has access after three abuse records summing more than the max", async () => {
+  it("No longer has access after three abuse records summing more than the max", (done) => {
 
     abusePoints.recordAbuse(fakeRequest, 4);
 
-    const isAbuser = await abusePoints.isAbuser(fakeRequest);
-    assert.strictEqual(isAbuser, true);
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    setTimeout(async () => {
+      const isAbuser = await abusePoints.isAbuser(fakeRequest);
+      assert.strictEqual(isAbuser, true);
+      done();
+    }, 500);
   });
 
 
-  it("Regains access after clearing all records", async () => {
+  it("Regains access after clearing all records", (done) => {
 
     abusePoints.clearAbuse(fakeRequest);
 
-    const isAbuser = await abusePoints.isAbuser(fakeRequest);
-    assert.strictEqual(isAbuser, false);
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    setTimeout(async () => {
+      const isAbuser = await abusePoints.isAbuser(fakeRequest);
+      assert.strictEqual(isAbuser, false);
+      done();
+    }, 500);
   });
 
 

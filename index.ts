@@ -105,7 +105,10 @@ const clearAbusePoints = (tableName: string, trackingValue: string) => {
 export const clearAbuse = (req: types.AbuseRequest) => {
   if (options.byIP) {
     const ipAddress = trackingValues.getIP(req);
-    clearAbusePoints(TABLENAME_IP, ipAddress);
+
+    if (ipAddress !== "") {
+      clearAbusePoints(TABLENAME_IP, ipAddress);
+    }
   }
 
   if (options.byXForwardedFor) {
@@ -127,10 +130,12 @@ export const isAbuser = async (req: types.AbuseRequest) => {
 
     const ipAddress = trackingValues.getIP(req);
 
-    const abusePoints = await getAbusePoints(TABLENAME_IP, ipAddress);
+    if (ipAddress !== "") {
+      const abusePoints = await getAbusePoints(TABLENAME_IP, ipAddress);
 
-    if (abusePoints >= options.abusePointsMax) {
-      return true;
+      if (abusePoints >= options.abusePointsMax) {
+        return true;
+      }
     }
   }
 
@@ -160,10 +165,13 @@ export const recordAbuse = (req: types.AbuseRequest, abusePoints: number = optio
 
   if (options.byIP) {
     const ipAddress = trackingValues.getIP(req);
-    db.run("INSERT INTO " + TABLENAME_IP + " " + TABLECOLUMNS_INSERT + " values (?, ?, ?)",
-      ipAddress,
-      expiryTimeMillis,
-      abusePoints);
+
+    if (ipAddress !== "") {
+      db.run("INSERT INTO " + TABLENAME_IP + " " + TABLECOLUMNS_INSERT + " values (?, ?, ?)",
+        ipAddress,
+        expiryTimeMillis,
+        abusePoints);
+    }
   }
 
   if (options.byXForwardedFor) {
