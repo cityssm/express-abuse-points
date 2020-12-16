@@ -28,6 +28,27 @@ const TABLECOLUMNS_INSERT = "(trackingValue, expiryTimeMillis, abusePoints)";
 let options: types.AbuseCheckOptions = OPTIONS_DEFAULT;
 let db: sqlite3.Database;
 
+let clearAbuseIntervalFn: NodeJS.Timeout;
+
+
+export const shutdown = () => {
+
+  try {
+    clearInterval(clearAbuseIntervalFn);
+  } catch (_e) {
+  } finally {
+    clearAbuseIntervalFn = null;
+  }
+
+  try {
+    db.close();
+  } catch (_e) {
+  } finally {
+    db = null;
+  }
+
+};
+
 
 export const initialize = (options_user?: types.AbuseCheckOptions) => {
 
@@ -44,6 +65,16 @@ export const initialize = (options_user?: types.AbuseCheckOptions) => {
     if (options.byXForwardedFor) {
       db.run("CREATE TABLE IF NOT EXISTS " + TABLENAME_XFORWARDEDFOR +
         " " + TABLECOLUMNS_CREATE);
+    }
+
+    clearAbuseIntervalFn = setInterval(clearExpiredAbuse, options.clearIntervalMillis);
+
+    if (process) {
+      const shutdownEvents = ["beforeExit", "exit", "SIGINT", "SIGTERM"];
+
+      for (const shutdownEvent of shutdownEvents) {
+        process.on(shutdownEvent, shutdown);
+      }
     }
   }
 };
@@ -193,8 +224,6 @@ export const recordAbuse = (req: types.AbuseRequest, abusePoints: number = optio
 export const abuseCheck = (options_user?: types.AbuseCheckOptions): express.RequestHandler => {
 
   initialize(options_user);
-
-  setInterval(clearExpiredAbuse, options.clearIntervalMillis);
 
   const handler: express.RequestHandler = async (req, res, next) => {
 

@@ -1,5 +1,6 @@
 import type * as express from "express";
 import type * as types from "./types";
+export declare const shutdown: () => void;
 export declare const initialize: (options_user?: types.AbuseCheckOptions) => void;
 export declare const clearAbuse: (req: types.AbuseRequest) => void;
 export declare const isAbuser: (req: types.AbuseRequest) => Promise<boolean>;

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.abuseCheck = exports.recordAbuse = exports.isAbuser = exports.clearAbuse = exports.initialize = void 0;
+exports.abuseCheck = exports.recordAbuse = exports.isAbuser = exports.clearAbuse = exports.initialize = exports.shutdown = void 0;
 const trackingValues = require("./trackingValues");
 const sqlite3 = require("sqlite3");
 const OPTIONS_DEFAULT = {
@@ -27,6 +27,26 @@ const TABLECOLUMNS_CREATE = "(trackingValue TEXT, expiryTimeMillis INT UNSIGNED,
 const TABLECOLUMNS_INSERT = "(trackingValue, expiryTimeMillis, abusePoints)";
 let options = OPTIONS_DEFAULT;
 let db;
+let clearAbuseIntervalFn;
+const shutdown = () => {
+    try {
+        clearInterval(clearAbuseIntervalFn);
+    }
+    catch (_e) {
+    }
+    finally {
+        clearAbuseIntervalFn = null;
+    }
+    try {
+        db.close();
+    }
+    catch (_e) {
+    }
+    finally {
+        db = null;
+    }
+};
+exports.shutdown = shutdown;
 const initialize = (options_user) => {
     options = Object.assign({}, OPTIONS_DEFAULT, options_user);
     if (!db) {
@@ -38,6 +58,13 @@ const initialize = (options_user) => {
         if (options.byXForwardedFor) {
             db.run("CREATE TABLE IF NOT EXISTS " + TABLENAME_XFORWARDEDFOR +
                 " " + TABLECOLUMNS_CREATE);
+        }
+        clearAbuseIntervalFn = setInterval(clearExpiredAbuse, options.clearIntervalMillis);
+        if (process) {
+            const shutdownEvents = ["beforeExit", "exit", "SIGINT", "SIGTERM"];
+            for (const shutdownEvent of shutdownEvents) {
+                process.on(shutdownEvent, exports.shutdown);
+            }
         }
     }
 };
@@ -127,7 +154,6 @@ const recordAbuse = (req, abusePoints = options.abusePoints, expiryMillis = opti
 exports.recordAbuse = recordAbuse;
 const abuseCheck = (options_user) => {
     exports.initialize(options_user);
-    setInterval(clearExpiredAbuse, options.clearIntervalMillis);
     const handler = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
         const isRequestAbuser = yield exports.isAbuser(req);
         if (isRequestAbuser) {
