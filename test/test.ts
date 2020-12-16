@@ -11,6 +11,7 @@ describe("express-abuse-points", () => {
     }
   };
 
+
   before((done) => {
     abusePoints.initialize({
       "byIP": true,
@@ -22,6 +23,11 @@ describe("express-abuse-points", () => {
 
     // eslint-disable-next-line @typescript-eslint/no-implied-eval
     setTimeout(done, 1000);
+  });
+
+
+  after(() => {
+    abusePoints.shutdown();
   });
 
 

@@ -28,6 +28,9 @@ describe("express-abuse-points", () => {
         });
         setTimeout(done, 1000);
     });
+    after(() => {
+        abusePoints.shutdown();
+    });
     it("Has access initially", () => __awaiter(void 0, void 0, void 0, function* () {
         const isAbuser = yield abusePoints.isAbuser(fakeRequest);
         assert.strictEqual(isAbuser, false);
