@@ -8,7 +8,7 @@ const isIP4AddressWithPort = (ipAddress) => {
 exports.isIP4AddressWithPort = isIP4AddressWithPort;
 const IPV6 = /^([a-f0-9:]+:+)+[a-f0-9]+$/;
 const isIP6Address = (ipAddress) => {
-    return IPV6.test(ipAddress);
+    return ipAddress.length <= 39 && IPV6.test(ipAddress);
 };
 exports.isIP6Address = isIP6Address;
 const getIP = (req) => {

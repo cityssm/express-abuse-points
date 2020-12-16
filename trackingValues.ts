@@ -11,7 +11,7 @@ export const isIP4AddressWithPort = (ipAddress: string) => {
 const IPV6 = /^([a-f0-9:]+:+)+[a-f0-9]+$/;
 
 export const isIP6Address = (ipAddress: string) => {
-  return IPV6.test(ipAddress);
+  return ipAddress.length <= 39 && IPV6.test(ipAddress);
 };
 
 
