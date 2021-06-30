@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import * as trackingValues from "../trackingValues";
+import * as trackingValues from "../trackingValues.js";
 
 
 describe("trackingValues", () => {

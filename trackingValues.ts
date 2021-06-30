@@ -3,28 +3,28 @@ import type * as types from "./types";
 
 const IPV4_WITH_PORT_REGEX = /^([12]?\d{1,2}\.){3}[12]?\d{1,2}(:\d{1,5})?$/;
 
-export const isIP4AddressWithPort = (ipAddress: string) => {
+export const isIP4AddressWithPort = (ipAddress: string): boolean => {
   return IPV4_WITH_PORT_REGEX.test(ipAddress);
 };
 
 
-const IPV6 = /^([a-f0-9:]+:+)+[a-f0-9]+$/;
+const IPV6 = /^([\d:a-f]+:+)+[\da-f]+$/;
 
-export const isIP6Address = (ipAddress: string) => {
+export const isIP6Address = (ipAddress: string): boolean => {
   return ipAddress.length <= 39 && IPV6.test(ipAddress);
 };
 
 
-export const getIP = (req: types.AbuseRequest) => {
-  return req.ip || "";
+export const getIP = (request: types.AbuseRequest): string => {
+  return request.ip || "";
 };
 
 
-export const getXForwardedFor = (req: types.AbuseRequest) => {
+export const getXForwardedFor = (request: types.AbuseRequest): string => {
 
-  if (req.headers) {
+  if (request.headers) {
 
-    const ipAddresses = req.headers["x-forwarded-for"] || "";
+    const ipAddresses = request.headers["x-forwarded-for"] || "";
 
     // Search for an IP address
 

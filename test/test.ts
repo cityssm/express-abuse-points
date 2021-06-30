@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import * as abusePoints from "../index";
+import * as abusePoints from "../index.js";
 
 
 describe("express-abuse-points", () => {
@@ -17,7 +17,7 @@ describe("express-abuse-points", () => {
       "byIP": true,
       "byXForwardedFor": true,
       "abusePointsMax": 10,
-      "expiryMillis": 10000,
+      "expiryMillis": 10_000,
       "clearIntervalMillis": 5000
     });
 

@@ -1,17 +1,5 @@
-"use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.abuseCheck = exports.recordAbuse = exports.isAbuser = exports.clearAbuse = exports.initialize = exports.shutdown = void 0;
-const trackingValues = require("./trackingValues");
-const sqlite3 = require("sqlite3");
+import * as trackingValues from "./trackingValues.js";
+import sqlite3 from "sqlite3";
 const OPTIONS_DEFAULT = {
     "byIP": true,
     "byXForwardedFor": false,
@@ -26,67 +14,65 @@ const TABLENAME_XFORWARDEDFOR = "AbusePoints_XForwardedFor";
 const TABLECOLUMNS_CREATE = "(trackingValue TEXT, expiryTimeMillis INT UNSIGNED, abusePoints TINYINT UNSIGNED)";
 const TABLECOLUMNS_INSERT = "(trackingValue, expiryTimeMillis, abusePoints)";
 let options = OPTIONS_DEFAULT;
-let db;
-let clearAbuseIntervalFn;
-const shutdown = () => {
+let database;
+let clearAbuseIntervalFunction;
+export const shutdown = () => {
     try {
-        clearInterval(clearAbuseIntervalFn);
+        clearInterval(clearAbuseIntervalFunction);
     }
-    catch (_e) {
+    catch (_a) {
     }
     finally {
-        clearAbuseIntervalFn = null;
+        clearAbuseIntervalFunction = undefined;
     }
     try {
-        db.close();
+        database.close();
     }
-    catch (_e) {
+    catch (_b) {
     }
     finally {
-        db = null;
+        database = undefined;
     }
 };
-exports.shutdown = shutdown;
-const initialize = (options_user) => {
+export const initialize = (options_user) => {
     options = Object.assign({}, OPTIONS_DEFAULT, options_user);
-    if (!db) {
-        db = new sqlite3.Database(":memory:");
+    if (!database) {
+        database = new sqlite3.Database(":memory:");
         if (options.byIP) {
-            db.run("CREATE TABLE IF NOT EXISTS " + TABLENAME_IP +
+            database.run("CREATE TABLE IF NOT EXISTS " + TABLENAME_IP +
                 " " + TABLECOLUMNS_CREATE);
         }
         if (options.byXForwardedFor) {
-            db.run("CREATE TABLE IF NOT EXISTS " + TABLENAME_XFORWARDEDFOR +
+            database.run("CREATE TABLE IF NOT EXISTS " + TABLENAME_XFORWARDEDFOR +
                 " " + TABLECOLUMNS_CREATE);
         }
-        clearAbuseIntervalFn = setInterval(clearExpiredAbuse, options.clearIntervalMillis);
+        clearAbuseIntervalFunction = setInterval(clearExpiredAbuse, options.clearIntervalMillis);
         if (process) {
             const shutdownEvents = ["beforeExit", "exit", "SIGINT", "SIGTERM"];
             for (const shutdownEvent of shutdownEvents) {
-                process.on(shutdownEvent, exports.shutdown);
+                process.on(shutdownEvent, shutdown);
             }
         }
     }
 };
-exports.initialize = initialize;
 const clearExpiredAbuse = () => {
     if (options.byIP) {
-        db.run("DELETE FROM " + TABLENAME_IP +
+        database.run("DELETE FROM " + TABLENAME_IP +
             " WHERE expiryTimeMillis <= ?", Date.now());
     }
     if (options.byXForwardedFor) {
-        db.run("DELETE FROM " + TABLENAME_XFORWARDEDFOR +
+        database.run("DELETE FROM " + TABLENAME_XFORWARDEDFOR +
             " WHERE expiryTimeMillis <= ?", Date.now());
     }
 };
-const getAbusePoints = (tableName, trackingValue) => __awaiter(void 0, void 0, void 0, function* () {
-    return yield new Promise((resolve, reject) => {
-        db.get("select sum(abusePoints) as abusePointsSum" +
+const getAbusePoints = async (tableName, trackingValue) => {
+    return await new Promise((resolve, reject) => {
+        database.get("select sum(abusePoints) as abusePointsSum" +
             " from " + tableName +
             " where trackingValue = ?" +
-            " and expiryTimeMillis > ?", trackingValue, Date.now(), (err, row) => {
-            if (err) {
-                reject(err);
+            " and expiryTimeMillis > ?", trackingValue, Date.now(), (error, row) => {
+            if (error) {
+                reject(error);
             }
             if (row === null || row === void 0 ? void 0 : row.abusePointsSum) {
                 resolve(row.abusePointsSum || 0);
@@ -94,77 +80,74 @@ const getAbusePoints = (tableName, trackingValue) => __awaiter(void 0, void 0, v
             resolve(0);
         });
     });
-});
+};
 const clearAbusePoints = (tableName, trackingValue) => {
-    db.run("delete from " + tableName +
+    database.run("delete from " + tableName +
         " where trackingValue = ?", trackingValue);
 };
-const clearAbuse = (req) => {
+export const clearAbuse = (request) => {
     if (options.byIP) {
-        const ipAddress = trackingValues.getIP(req);
+        const ipAddress = trackingValues.getIP(request);
         if (ipAddress !== "") {
             clearAbusePoints(TABLENAME_IP, ipAddress);
         }
     }
     if (options.byXForwardedFor) {
-        const ipAddress = trackingValues.getXForwardedFor(req);
+        const ipAddress = trackingValues.getXForwardedFor(request);
         if (ipAddress !== "") {
             clearAbusePoints(TABLENAME_XFORWARDEDFOR, ipAddress);
         }
     }
 };
-exports.clearAbuse = clearAbuse;
-const isAbuser = (req) => __awaiter(void 0, void 0, void 0, function* () {
+export const isAbuser = async (request) => {
     if (options.byIP) {
-        const ipAddress = trackingValues.getIP(req);
+        const ipAddress = trackingValues.getIP(request);
         if (ipAddress !== "") {
-            const abusePoints = yield getAbusePoints(TABLENAME_IP, ipAddress);
+            const abusePoints = await getAbusePoints(TABLENAME_IP, ipAddress);
             if (abusePoints >= options.abusePointsMax) {
                 return true;
             }
         }
     }
     if (options.byXForwardedFor) {
-        const ipAddress = trackingValues.getXForwardedFor(req);
+        const ipAddress = trackingValues.getXForwardedFor(request);
         if (ipAddress !== "") {
-            const abusePoints = yield getAbusePoints(TABLENAME_XFORWARDEDFOR, ipAddress);
+            const abusePoints = await getAbusePoints(TABLENAME_XFORWARDEDFOR, ipAddress);
             if (abusePoints >= options.abusePointsMax) {
                 return true;
             }
         }
     }
     return false;
-});
-exports.isAbuser = isAbuser;
-const recordAbuse = (req, abusePoints = options.abusePoints, expiryMillis = options.expiryMillis) => {
+};
+export const recordAbuse = (request, abusePoints = options.abusePoints, expiryMillis = options.expiryMillis) => {
     const expiryTimeMillis = Date.now() + expiryMillis;
     if (options.byIP) {
-        const ipAddress = trackingValues.getIP(req);
+        const ipAddress = trackingValues.getIP(request);
         if (ipAddress !== "") {
-            db.run("INSERT INTO " + TABLENAME_IP + " " + TABLECOLUMNS_INSERT + " values (?, ?, ?)", ipAddress, expiryTimeMillis, abusePoints);
+            database.run("INSERT INTO " + TABLENAME_IP + " " + TABLECOLUMNS_INSERT + " values (?, ?, ?)", ipAddress, expiryTimeMillis, abusePoints);
         }
     }
     if (options.byXForwardedFor) {
-        const ipAddress = trackingValues.getXForwardedFor(req);
+        const ipAddress = trackingValues.getXForwardedFor(request);
         if (ipAddress !== "") {
-            db.run("INSERT INTO " + TABLENAME_XFORWARDEDFOR + " " + TABLECOLUMNS_INSERT + " values (?, ?, ?)", ipAddress, expiryTimeMillis, abusePoints);
+            database.run("INSERT INTO " + TABLENAME_XFORWARDEDFOR + " " + TABLECOLUMNS_INSERT + " values (?, ?, ?)", ipAddress, expiryTimeMillis, abusePoints);
         }
     }
 };
-exports.recordAbuse = recordAbuse;
-const abuseCheck = (options_user) => {
-    exports.initialize(options_user);
-    const handler = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-        const isRequestAbuser = yield exports.isAbuser(req);
-        if (isRequestAbuser) {
-            res.status(403)
-                .send("Access temporarily restricted.");
-            res.end();
-        }
-        else {
-            next();
-        }
-    });
-    return handler;
+const abuseCheckHandler = async (request, response, next) => {
+    const isRequestAbuser = await isAbuser(request);
+    if (isRequestAbuser) {
+        response
+            .status(403)
+            .send("Access temporarily restricted.");
+        response.end();
+    }
+    else {
+        next();
+    }
 };
-exports.abuseCheck = abuseCheck;
+export const abuseCheck = (options_user) => {
+    initialize(options_user);
+    return abuseCheckHandler;
+};

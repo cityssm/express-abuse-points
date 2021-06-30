@@ -1,16 +1,5 @@
-"use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const assert = require("assert");
-const abusePoints = require("../index");
+import * as assert from "assert";
+import * as abusePoints from "../index.js";
 describe("express-abuse-points", () => {
     const fakeRequest = {
         "ip": "127.0.0.1",
@@ -31,35 +20,35 @@ describe("express-abuse-points", () => {
     after(() => {
         abusePoints.shutdown();
     });
-    it("Has access initially", () => __awaiter(void 0, void 0, void 0, function* () {
-        const isAbuser = yield abusePoints.isAbuser(fakeRequest);
+    it("Has access initially", async () => {
+        const isAbuser = await abusePoints.isAbuser(fakeRequest);
         assert.strictEqual(isAbuser, false);
-    }));
-    it("Still has access after one abuse record with less points than the max", () => __awaiter(void 0, void 0, void 0, function* () {
+    });
+    it("Still has access after one abuse record with less points than the max", async () => {
         abusePoints.recordAbuse(fakeRequest, 4);
-        const isAbuser = yield abusePoints.isAbuser(fakeRequest);
+        const isAbuser = await abusePoints.isAbuser(fakeRequest);
         assert.strictEqual(isAbuser, false);
-    }));
-    it("Still has access after two abuse records with less points than the max", () => __awaiter(void 0, void 0, void 0, function* () {
+    });
+    it("Still has access after two abuse records with less points than the max", async () => {
         abusePoints.recordAbuse(fakeRequest, 4);
-        const isAbuser = yield abusePoints.isAbuser(fakeRequest);
+        const isAbuser = await abusePoints.isAbuser(fakeRequest);
         assert.strictEqual(isAbuser, false);
-    }));
+    });
     it("No longer has access after three abuse records summing more than the max", (done) => {
         abusePoints.recordAbuse(fakeRequest, 4);
-        setTimeout(() => __awaiter(void 0, void 0, void 0, function* () {
-            const isAbuser = yield abusePoints.isAbuser(fakeRequest);
+        setTimeout(async () => {
+            const isAbuser = await abusePoints.isAbuser(fakeRequest);
             assert.strictEqual(isAbuser, true);
             done();
-        }), 500);
+        }, 500);
     });
     it("Regains access after clearing all records", (done) => {
         abusePoints.clearAbuse(fakeRequest);
-        setTimeout(() => __awaiter(void 0, void 0, void 0, function* () {
-            const isAbuser = yield abusePoints.isAbuser(fakeRequest);
+        setTimeout(async () => {
+            const isAbuser = await abusePoints.isAbuser(fakeRequest);
             assert.strictEqual(isAbuser, false);
             done();
-        }), 500);
+        }, 500);
     });
     it("Records abuse record with using all defaults", () => {
         abusePoints.recordAbuse(fakeRequest);

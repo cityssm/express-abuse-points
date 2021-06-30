@@ -1,7 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const assert = require("assert");
-const trackingValues = require("../trackingValues");
+import * as assert from "assert";
+import * as trackingValues from "../trackingValues.js";
 describe("trackingValues", () => {
     describe("getIP()", () => {
         it("Finds the IP address in a request", () => {
