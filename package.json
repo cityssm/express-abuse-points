@@ -30,12 +30,12 @@
   },
   "homepage": "https://github.com/cityssm/express-abuse-points#readme",
   "devDependencies": {
-    "@types/express": "^4.17.12",
-    "@types/mocha": "^8.2.2",
+    "@types/express": "^4.17.13",
+    "@types/mocha": "^9.0.0",
     "@types/sqlite3": "^3.1.7",
-    "@typescript-eslint/eslint-plugin": "^4.28.1",
-    "@typescript-eslint/parser": "^4.28.1",
-    "eslint": "^7.29.0",
+    "@typescript-eslint/eslint-plugin": "^4.28.4",
+    "@typescript-eslint/parser": "^4.28.4",
+    "eslint": "^7.31.0",
     "eslint-plugin-import": "^2.23.4",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-unicorn": "^34.0.1"
