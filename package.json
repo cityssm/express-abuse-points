@@ -1,6 +1,6 @@
 {
   "name": "@cityssm/express-abuse-points",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Express.js middleware for tracking and blocking abusive behaviour.",
   "type": "module",
   "exports": "./index.js",
@@ -9,7 +9,7 @@
   },
   "scripts": {
     "test": "mocha --timeout 7000",
-    "coverage": "nyc mocha --timeout 7000"
+    "coverage": "c8 mocha --timeout 7000"
   },
   "repository": {
     "type": "git",
@@ -33,15 +33,15 @@
     "@types/express": "^4.17.13",
     "@types/mocha": "^9.0.0",
     "@types/sqlite3": "^3.1.7",
-    "@typescript-eslint/eslint-plugin": "^4.29.0",
-    "@typescript-eslint/parser": "^4.29.0",
+    "@typescript-eslint/eslint-plugin": "^4.29.2",
+    "@typescript-eslint/parser": "^4.29.2",
     "eslint": "^7.32.0",
-    "eslint-plugin-import": "^2.23.4",
+    "eslint-plugin-import": "^2.24.0",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-unicorn": "^35.0.0"
   },
   "dependencies": {
     "express": "^4.17.1",
-    "sqlite3": "^5.0.2"
+    "sqlite3": "^4.2.0"
   }
 }

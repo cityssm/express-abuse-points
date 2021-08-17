@@ -15,9 +15,10 @@ const OPTIONS_DEFAULT: types.AbuseCheckOptions = {
   "abusePointsMax": 10,
   "clearIntervalMillis": 60 * 60 * 1000 // 1 hour
 };
+
 Object.freeze(OPTIONS_DEFAULT);
 
-
+type TABLENAME = "AbusePoints_IP" | "AbusePoints_XForwardedFor";
 const TABLENAME_IP = "AbusePoints_IP";
 const TABLENAME_XFORWARDEDFOR = "AbusePoints_XForwardedFor";
 
@@ -96,7 +97,7 @@ const clearExpiredAbuse = () => {
 };
 
 
-const getAbusePoints = async (tableName: string, trackingValue: string) => {
+const getAbusePoints = async (tableName: TABLENAME, trackingValue: string): Promise<number> => {
 
   return await new Promise((resolve, reject) => {
 
@@ -123,7 +124,7 @@ const getAbusePoints = async (tableName: string, trackingValue: string) => {
 };
 
 
-const clearAbusePoints = (tableName: string, trackingValue: string) => {
+const clearAbusePoints = (tableName: TABLENAME, trackingValue: string) => {
   database.run("delete from " + tableName +
     " where trackingValue = ?",
     trackingValue
