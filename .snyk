@@ -1,0 +1,33 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.22.1
+# ignores vulnerabilities until expiry date; change duration by modifying expiry date
+ignore:
+  SNYK-JS-JSONSCHEMA-1920922:
+    - sqlite3 > node-gyp > request > http-signature > jsprim > json-schema:
+        reason: None given
+        expires: '2021-12-17T19:54:35.038Z'
+  SNYK-JS-TAR-1536528:
+    - sqlite3 > node-gyp > tar:
+        reason: None given
+        expires: '2021-12-17T19:54:35.038Z'
+  SNYK-JS-TAR-1536531:
+    - sqlite3 > node-gyp > tar:
+        reason: None given
+        expires: '2021-12-17T19:54:35.038Z'
+  SNYK-JS-TAR-1536758:
+    - sqlite3 > node-gyp > tar:
+        reason: None given
+        expires: '2021-12-17T19:54:35.038Z'
+  SNYK-JS-TAR-1579147:
+    - sqlite3 > node-gyp > tar:
+        reason: None given
+        expires: '2021-12-17T19:54:35.038Z'
+  SNYK-JS-TAR-1579152:
+    - sqlite3 > node-gyp > tar:
+        reason: None given
+        expires: '2021-12-17T19:54:35.038Z'
+  SNYK-JS-TAR-1579155:
+    - sqlite3 > node-gyp > tar:
+        reason: None given
+        expires: '2021-12-17T19:54:35.038Z'
+patch: {}
