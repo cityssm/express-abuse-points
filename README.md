@@ -5,7 +5,6 @@
 [![Code Climate maintainability](https://img.shields.io/codeclimate/maintainability/cityssm/express-abuse-points)](https://codeclimate.com/github/cityssm/express-abuse-points)
 [![Code Climate coverage](https://img.shields.io/codeclimate/coverage/cityssm/express-abuse-points)](https://codeclimate.com/github/cityssm/express-abuse-points)
 [![AppVeyor](https://img.shields.io/appveyor/build/dangowans/express-abuse-points)](https://ci.appveyor.com/project/dangowans/express-abuse-points)
-[![Snyk Vulnerabilities for GitHub Repo](https://img.shields.io/snyk/vulnerabilities/github/cityssm/express-abuse-points)](https://app.snyk.io/org/cityssm/project/8a8a0565-5ff3-41be-a940-598fb98dd0bc)
 
 Express.js middleware for tracking and blocking abusive behaviour.
 

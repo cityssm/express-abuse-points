@@ -1,8 +1,8 @@
-import express from "express";
-import type * as types from "./types";
-export declare const shutdown: () => void;
-export declare const initialize: (options_user?: types.AbuseCheckOptions) => void;
-export declare const clearAbuse: (request: types.AbuseRequest) => void;
-export declare const isAbuser: (request: types.AbuseRequest) => Promise<boolean>;
-export declare const recordAbuse: (request: types.AbuseRequest, abusePoints?: number, expiryMillis?: number) => void;
-export declare const abuseCheck: (options_user?: types.AbuseCheckOptions) => express.RequestHandler;
+import type express from 'express';
+import type * as types from './types';
+export declare function shutdown(): void;
+export declare function initialize(optionsUser?: Partial<types.AbuseCheckOptions>): express.RequestHandler;
+export declare function clearAbuse(request: Partial<express.Request>): void;
+export declare function isAbuser(request: Partial<express.Request>): Promise<boolean>;
+export declare function recordAbuse(request: Partial<express.Request>, abusePoints?: number, expiryMillis?: number): void;
+export declare function abuseCheck(optionsUser?: types.AbuseCheckOptions): express.RequestHandler;

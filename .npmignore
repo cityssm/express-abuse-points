@@ -5,11 +5,11 @@ coverage
 node_modules
 test
 
-.atomignore
 .eslintignore
 .eslintrc.json
 .gitignore
 .npmignore
+.prettierignore
+.prettierrc.json
 .snyk
-appveyor.yml
 tsconfig.json
