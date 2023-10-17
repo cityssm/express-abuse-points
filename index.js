@@ -1,5 +1,5 @@
 import sqlite3 from 'sqlite3';
-import * as trackingValues from './trackingValues.js';
+import { getIP, getXForwardedFor } from './trackingValues.js';
 const OPTIONS_DEFAULT = {
     byIP: true,
     byXForwardedFor: false,
@@ -76,13 +76,13 @@ function clearAbusePoints(tableName, trackingValue) {
 }
 export function clearAbuse(request) {
     if (options.byIP) {
-        const ipAddress = trackingValues.getIP(request);
+        const ipAddress = getIP(request);
         if (ipAddress !== '') {
             clearAbusePoints(TABLENAME_IP, ipAddress);
         }
     }
     if (options.byXForwardedFor) {
-        const ipAddress = trackingValues.getXForwardedFor(request);
+        const ipAddress = getXForwardedFor(request);
         if (ipAddress !== '') {
             clearAbusePoints(TABLENAME_XFORWARDEDFOR, ipAddress);
         }
@@ -90,7 +90,7 @@ export function clearAbuse(request) {
 }
 export async function isAbuser(request) {
     if (options.byIP) {
-        const ipAddress = trackingValues.getIP(request);
+        const ipAddress = getIP(request);
         if (ipAddress !== '') {
             const abusePoints = await getAbusePoints(TABLENAME_IP, ipAddress);
             if (abusePoints >= options.abusePointsMax) {
@@ -99,7 +99,7 @@ export async function isAbuser(request) {
         }
     }
     if (options.byXForwardedFor) {
-        const ipAddress = trackingValues.getXForwardedFor(request);
+        const ipAddress = getXForwardedFor(request);
         if (ipAddress !== '') {
             const abusePoints = await getAbusePoints(TABLENAME_XFORWARDEDFOR, ipAddress);
             if (abusePoints >= options.abusePointsMax) {
@@ -112,13 +112,13 @@ export async function isAbuser(request) {
 export function recordAbuse(request, abusePoints = options.abusePoints, expiryMillis = options.expiryMillis) {
     const expiryTimeMillis = Date.now() + expiryMillis;
     if (options.byIP) {
-        const ipAddress = trackingValues.getIP(request);
+        const ipAddress = getIP(request);
         if (ipAddress !== '') {
             database.run(`INSERT INTO ${TABLENAME_IP} ${TABLECOLUMNS_INSERT} VALUES (?, ?, ?)`, ipAddress, expiryTimeMillis, abusePoints);
         }
     }
     if (options.byXForwardedFor) {
-        const ipAddress = trackingValues.getXForwardedFor(request);
+        const ipAddress = getXForwardedFor(request);
         if (ipAddress !== '') {
             database.run(`INSERT INTO ${TABLENAME_XFORWARDEDFOR} ${TABLECOLUMNS_INSERT} VALUES (?, ?, ?)`, ipAddress, expiryTimeMillis, abusePoints);
         }

@@ -1,7 +1,7 @@
 import type express from 'express'
 import sqlite3 from 'sqlite3'
 
-import * as trackingValues from './trackingValues.js'
+import { getIP, getXForwardedFor } from './trackingValues.js'
 import type { AbuseCheckOptions } from './types.js'
 
 const OPTIONS_DEFAULT: AbuseCheckOptions = {
@@ -134,7 +134,7 @@ function clearAbusePoints(tableName: TABLENAME, trackingValue: string): void {
  */
 export function clearAbuse(request: Partial<express.Request>): void {
   if (options.byIP) {
-    const ipAddress = trackingValues.getIP(request)
+    const ipAddress = getIP(request)
 
     if (ipAddress !== '') {
       clearAbusePoints(TABLENAME_IP, ipAddress)
@@ -142,7 +142,7 @@ export function clearAbuse(request: Partial<express.Request>): void {
   }
 
   if (options.byXForwardedFor) {
-    const ipAddress = trackingValues.getXForwardedFor(request)
+    const ipAddress = getXForwardedFor(request)
 
     if (ipAddress !== '') {
       clearAbusePoints(TABLENAME_XFORWARDEDFOR, ipAddress)
@@ -157,7 +157,7 @@ export async function isAbuser(
   request: Partial<express.Request>
 ): Promise<boolean> {
   if (options.byIP) {
-    const ipAddress = trackingValues.getIP(request)
+    const ipAddress = getIP(request)
 
     if (ipAddress !== '') {
       const abusePoints = await getAbusePoints(TABLENAME_IP, ipAddress)
@@ -169,7 +169,7 @@ export async function isAbuser(
   }
 
   if (options.byXForwardedFor) {
-    const ipAddress = trackingValues.getXForwardedFor(request)
+    const ipAddress = getXForwardedFor(request)
 
     if (ipAddress !== '') {
       const abusePoints = await getAbusePoints(
@@ -197,7 +197,7 @@ export function recordAbuse(
   const expiryTimeMillis = Date.now() + expiryMillis
 
   if (options.byIP) {
-    const ipAddress = trackingValues.getIP(request)
+    const ipAddress = getIP(request)
 
     if (ipAddress !== '') {
       database.run(
@@ -210,7 +210,7 @@ export function recordAbuse(
   }
 
   if (options.byXForwardedFor) {
-    const ipAddress = trackingValues.getXForwardedFor(request)
+    const ipAddress = getXForwardedFor(request)
 
     if (ipAddress !== '') {
       database.run(
