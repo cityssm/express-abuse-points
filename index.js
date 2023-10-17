@@ -37,13 +37,10 @@ export function initialize(optionsUser) {
     if (database === undefined) {
         database = new sqlite3.Database(':memory:');
         if (options.byIP) {
-            database.run('CREATE TABLE IF NOT EXISTS ' + TABLENAME_IP + ' ' + TABLECOLUMNS_CREATE);
+            database.run(`CREATE TABLE IF NOT EXISTS ${TABLENAME_IP} ${TABLECOLUMNS_CREATE}`);
         }
         if (options.byXForwardedFor) {
-            database.run('CREATE TABLE IF NOT EXISTS ' +
-                TABLENAME_XFORWARDEDFOR +
-                ' ' +
-                TABLECOLUMNS_CREATE);
+            database.run(`CREATE TABLE IF NOT EXISTS ${TABLENAME_XFORWARDEDFOR} ${TABLECOLUMNS_CREATE}`);
         }
         clearAbuseIntervalFunction = setInterval(clearExpiredAbuse, options.clearIntervalMillis);
         const shutdownEvents = ['beforeExit', 'exit', 'SIGINT', 'SIGTERM'];
@@ -75,7 +72,7 @@ async function getAbusePoints(tableName, trackingValue) {
     });
 }
 function clearAbusePoints(tableName, trackingValue) {
-    database.run(`delete from ${tableName} where trackingValue = ?`, trackingValue);
+    database.run(`DELETE FROM ${tableName} WHERE trackingValue = ?`, trackingValue);
 }
 export function clearAbuse(request) {
     if (options.byIP) {
@@ -117,13 +114,13 @@ export function recordAbuse(request, abusePoints = options.abusePoints, expiryMi
     if (options.byIP) {
         const ipAddress = trackingValues.getIP(request);
         if (ipAddress !== '') {
-            database.run(`INSERT INTO ${TABLENAME_IP} ${TABLECOLUMNS_INSERT} values (?, ?, ?)`, ipAddress, expiryTimeMillis, abusePoints);
+            database.run(`INSERT INTO ${TABLENAME_IP} ${TABLECOLUMNS_INSERT} VALUES (?, ?, ?)`, ipAddress, expiryTimeMillis, abusePoints);
         }
     }
     if (options.byXForwardedFor) {
         const ipAddress = trackingValues.getXForwardedFor(request);
         if (ipAddress !== '') {
-            database.run(`INSERT INTO ${TABLENAME_XFORWARDEDFOR} ${TABLECOLUMNS_INSERT} values (?, ?, ?)`, ipAddress, expiryTimeMillis, abusePoints);
+            database.run(`INSERT INTO ${TABLENAME_XFORWARDEDFOR} ${TABLECOLUMNS_INSERT} VALUES (?, ?, ?)`, ipAddress, expiryTimeMillis, abusePoints);
         }
     }
 }

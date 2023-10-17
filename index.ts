@@ -58,16 +58,13 @@ export function initialize(
 
     if (options.byIP) {
       database.run(
-        'CREATE TABLE IF NOT EXISTS ' + TABLENAME_IP + ' ' + TABLECOLUMNS_CREATE
+        `CREATE TABLE IF NOT EXISTS ${TABLENAME_IP} ${TABLECOLUMNS_CREATE}`
       )
     }
 
     if (options.byXForwardedFor) {
       database.run(
-        'CREATE TABLE IF NOT EXISTS ' +
-          TABLENAME_XFORWARDEDFOR +
-          ' ' +
-          TABLECOLUMNS_CREATE
+        `CREATE TABLE IF NOT EXISTS ${TABLENAME_XFORWARDEDFOR} ${TABLECOLUMNS_CREATE}`
       )
     }
 
@@ -127,7 +124,7 @@ async function getAbusePoints(
 
 function clearAbusePoints(tableName: TABLENAME, trackingValue: string): void {
   database.run(
-    `delete from ${tableName} where trackingValue = ?`,
+    `DELETE FROM ${tableName} WHERE trackingValue = ?`,
     trackingValue
   )
 }
@@ -204,7 +201,7 @@ export function recordAbuse(
 
     if (ipAddress !== '') {
       database.run(
-        `INSERT INTO ${TABLENAME_IP} ${TABLECOLUMNS_INSERT} values (?, ?, ?)`,
+        `INSERT INTO ${TABLENAME_IP} ${TABLECOLUMNS_INSERT} VALUES (?, ?, ?)`,
         ipAddress,
         expiryTimeMillis,
         abusePoints
@@ -217,7 +214,7 @@ export function recordAbuse(
 
     if (ipAddress !== '') {
       database.run(
-        `INSERT INTO ${TABLENAME_XFORWARDEDFOR} ${TABLECOLUMNS_INSERT} values (?, ?, ?)`,
+        `INSERT INTO ${TABLENAME_XFORWARDEDFOR} ${TABLECOLUMNS_INSERT} VALUES (?, ?, ?)`,
         ipAddress,
         expiryTimeMillis,
         abusePoints
