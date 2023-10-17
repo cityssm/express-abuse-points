@@ -22,14 +22,14 @@ export function shutdown() {
             clearInterval(clearAbuseIntervalFunction);
         }
     }
-    catch (_a) {
+    catch {
     }
     try {
         if (database !== undefined) {
             database.close();
         }
     }
-    catch (_b) {
+    catch {
     }
 }
 export function initialize(optionsUser) {
@@ -55,10 +55,10 @@ export function initialize(optionsUser) {
 }
 function clearExpiredAbuse() {
     if (options.byIP && database !== undefined) {
-        database.run('DELETE FROM ' + TABLENAME_IP + ' WHERE expiryTimeMillis <= ?', Date.now());
+        database.run(`DELETE FROM ${TABLENAME_IP} WHERE expiryTimeMillis <= ?`, Date.now());
     }
     if (options.byXForwardedFor && database !== undefined) {
-        database.run('DELETE FROM ' + TABLENAME_XFORWARDEDFOR + ' WHERE expiryTimeMillis <= ?', Date.now());
+        database.run(`DELETE FROM ${TABLENAME_XFORWARDEDFOR} WHERE expiryTimeMillis <= ?`, Date.now());
     }
 }
 async function getAbusePoints(tableName, trackingValue) {
@@ -67,16 +67,15 @@ async function getAbusePoints(tableName, trackingValue) {
         from ${tableName}
         where trackingValue = ?
         and expiryTimeMillis > ?`, trackingValue, Date.now(), (error, row) => {
-            var _a;
             if (error !== null) {
                 reject(error);
             }
-            resolve((_a = row === null || row === void 0 ? void 0 : row.abusePointsSum) !== null && _a !== void 0 ? _a : 0);
+            resolve(row?.abusePointsSum ?? 0);
         });
     });
 }
 function clearAbusePoints(tableName, trackingValue) {
-    database.run('delete from ' + tableName + ' where trackingValue = ?', trackingValue);
+    database.run(`delete from ${tableName} where trackingValue = ?`, trackingValue);
 }
 export function clearAbuse(request) {
     if (options.byIP) {
@@ -118,21 +117,13 @@ export function recordAbuse(request, abusePoints = options.abusePoints, expiryMi
     if (options.byIP) {
         const ipAddress = trackingValues.getIP(request);
         if (ipAddress !== '') {
-            database.run('INSERT INTO ' +
-                TABLENAME_IP +
-                ' ' +
-                TABLECOLUMNS_INSERT +
-                ' values (?, ?, ?)', ipAddress, expiryTimeMillis, abusePoints);
+            database.run(`INSERT INTO ${TABLENAME_IP} ${TABLECOLUMNS_INSERT} values (?, ?, ?)`, ipAddress, expiryTimeMillis, abusePoints);
         }
     }
     if (options.byXForwardedFor) {
         const ipAddress = trackingValues.getXForwardedFor(request);
         if (ipAddress !== '') {
-            database.run('INSERT INTO ' +
-                TABLENAME_XFORWARDEDFOR +
-                ' ' +
-                TABLECOLUMNS_INSERT +
-                ' values (?, ?, ?)', ipAddress, expiryTimeMillis, abusePoints);
+            database.run(`INSERT INTO ${TABLENAME_XFORWARDEDFOR} ${TABLECOLUMNS_INSERT} values (?, ?, ?)`, ipAddress, expiryTimeMillis, abusePoints);
         }
     }
 }

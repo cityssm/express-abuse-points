@@ -1,10 +1,9 @@
 # express-abuse-points
 
 [![npm](https://img.shields.io/npm/v/@cityssm/express-abuse-points)](https://www.npmjs.com/package/@cityssm/express-abuse-points)
-[![Codacy grade](https://img.shields.io/codacy/grade/30a4649059f44f149753ef527b8fe04d)](https://app.codacy.com/gh/cityssm/express-abuse-points/dashboard)
+[![DeepSource](https://app.deepsource.com/gh/cityssm/express-abuse-points.svg/?label=active+issues&show_trend=true&token=yB1nguIDLwV_FPUHv4zjmIF_)](https://app.deepsource.com/gh/cityssm/express-abuse-points/)
 [![Code Climate maintainability](https://img.shields.io/codeclimate/maintainability/cityssm/express-abuse-points)](https://codeclimate.com/github/cityssm/express-abuse-points)
-[![Code Climate coverage](https://img.shields.io/codeclimate/coverage/cityssm/express-abuse-points)](https://codeclimate.com/github/cityssm/express-abuse-points)
-[![AppVeyor](https://img.shields.io/appveyor/build/dangowans/express-abuse-points)](https://ci.appveyor.com/project/dangowans/express-abuse-points)
+[![codecov](https://codecov.io/gh/cityssm/express-abuse-points/graph/badge.svg?token=TSFEM1DXCF)](https://codecov.io/gh/cityssm/express-abuse-points)
 
 Express.js middleware for tracking and blocking abusive behaviour.
 

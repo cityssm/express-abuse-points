@@ -2,9 +2,9 @@ import type express from 'express'
 import sqlite3 from 'sqlite3'
 
 import * as trackingValues from './trackingValues.js'
-import type * as types from './types'
+import type { AbuseCheckOptions } from './types.js'
 
-const OPTIONS_DEFAULT: types.AbuseCheckOptions = {
+const OPTIONS_DEFAULT: AbuseCheckOptions = {
   byIP: true,
   byXForwardedFor: false,
 
@@ -25,7 +25,7 @@ const TABLECOLUMNS_CREATE =
   '(trackingValue TEXT, expiryTimeMillis INT UNSIGNED, abusePoints TINYINT UNSIGNED)'
 const TABLECOLUMNS_INSERT = '(trackingValue, expiryTimeMillis, abusePoints)'
 
-let options: types.AbuseCheckOptions = OPTIONS_DEFAULT
+let options: AbuseCheckOptions = OPTIONS_DEFAULT
 let database: sqlite3.Database
 
 let clearAbuseIntervalFunction: NodeJS.Timeout
@@ -49,7 +49,7 @@ export function shutdown(): void {
 }
 
 export function initialize(
-  optionsUser?: Partial<types.AbuseCheckOptions>
+  optionsUser?: Partial<AbuseCheckOptions>
 ): express.RequestHandler {
   options = Object.assign({}, OPTIONS_DEFAULT, optionsUser)
 
@@ -89,14 +89,14 @@ export function initialize(
 function clearExpiredAbuse(): void {
   if (options.byIP && database !== undefined) {
     database.run(
-      'DELETE FROM ' + TABLENAME_IP + ' WHERE expiryTimeMillis <= ?',
+      `DELETE FROM ${TABLENAME_IP} WHERE expiryTimeMillis <= ?`,
       Date.now()
     )
   }
 
   if (options.byXForwardedFor && database !== undefined) {
     database.run(
-      'DELETE FROM ' + TABLENAME_XFORWARDEDFOR + ' WHERE expiryTimeMillis <= ?',
+      `DELETE FROM ${TABLENAME_XFORWARDEDFOR} WHERE expiryTimeMillis <= ?`,
       Date.now()
     )
   }
@@ -127,7 +127,7 @@ async function getAbusePoints(
 
 function clearAbusePoints(tableName: TABLENAME, trackingValue: string): void {
   database.run(
-    'delete from ' + tableName + ' where trackingValue = ?',
+    `delete from ${tableName} where trackingValue = ?`,
     trackingValue
   )
 }
@@ -204,11 +204,7 @@ export function recordAbuse(
 
     if (ipAddress !== '') {
       database.run(
-        'INSERT INTO ' +
-          TABLENAME_IP +
-          ' ' +
-          TABLECOLUMNS_INSERT +
-          ' values (?, ?, ?)',
+        `INSERT INTO ${TABLENAME_IP} ${TABLECOLUMNS_INSERT} values (?, ?, ?)`,
         ipAddress,
         expiryTimeMillis,
         abusePoints
@@ -221,11 +217,7 @@ export function recordAbuse(
 
     if (ipAddress !== '') {
       database.run(
-        'INSERT INTO ' +
-          TABLENAME_XFORWARDEDFOR +
-          ' ' +
-          TABLECOLUMNS_INSERT +
-          ' values (?, ?, ?)',
+        `INSERT INTO ${TABLENAME_XFORWARDEDFOR} ${TABLECOLUMNS_INSERT} values (?, ?, ?)`,
         ipAddress,
         expiryTimeMillis,
         abusePoints
@@ -255,7 +247,7 @@ async function abuseCheckHandler(
 }
 
 export function abuseCheck(
-  optionsUser?: types.AbuseCheckOptions
+  optionsUser?: AbuseCheckOptions
 ): express.RequestHandler {
   initialize(optionsUser)
   return abuseCheckHandler as express.RequestHandler
