@@ -249,3 +249,12 @@ export function abuseCheck(
   initialize(optionsUser)
   return abuseCheckHandler as express.RequestHandler
 }
+
+export default {
+  initialize,
+  shutdown,
+  recordAbuse,
+  isAbuser,
+  clearAbuse,
+  abuseCheck
+}

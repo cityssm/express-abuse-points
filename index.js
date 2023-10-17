@@ -138,3 +138,11 @@ export function abuseCheck(optionsUser) {
     initialize(optionsUser);
     return abuseCheckHandler;
 }
+export default {
+    initialize,
+    shutdown,
+    recordAbuse,
+    isAbuser,
+    clearAbuse,
+    abuseCheck
+};
