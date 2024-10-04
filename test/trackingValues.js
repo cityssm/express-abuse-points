@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { describe, it } from 'node:test';
 import * as trackingValues from '../trackingValues.js';
+// eslint-disable-next-line sonarjs/no-hardcoded-ip
 const testIp = '192.168.0.1';
 await describe('trackingValues', async () => {
     await describe('getIP()', async () => {
