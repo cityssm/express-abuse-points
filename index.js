@@ -4,6 +4,7 @@ import { getIP, getXForwardedFor } from './trackingValues.js';
 const OPTIONS_DEFAULT = {
     byIP: true,
     byXForwardedFor: false,
+    abuseMessageText: 'Access temporarily restricted.',
     // eslint-disable-next-line @typescript-eslint/no-magic-numbers
     abusePoints: 1,
     // eslint-disable-next-line @typescript-eslint/no-magic-numbers
@@ -178,7 +179,7 @@ export function recordAbuse(request, abusePoints = options.abusePoints, expiryMi
 function abuseCheckHandler(request, response, next) {
     const isRequestAbuser = isAbuser(request);
     if (isRequestAbuser) {
-        response.status(403).send('Access temporarily restricted.');
+        response.status(403).send(options.abuseMessageText);
         response.end();
     }
     else {

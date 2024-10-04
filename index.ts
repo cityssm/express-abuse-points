@@ -9,6 +9,8 @@ const OPTIONS_DEFAULT: AbuseCheckOptions = {
   byIP: true,
   byXForwardedFor: false,
 
+  abuseMessageText: 'Access temporarily restricted.',
+
   // eslint-disable-next-line @typescript-eslint/no-magic-numbers
   abusePoints: 1,
 
@@ -251,7 +253,7 @@ function abuseCheckHandler(
   const isRequestAbuser = isAbuser(request)
 
   if (isRequestAbuser) {
-    response.status(403).send('Access temporarily restricted.')
+    response.status(403).send(options.abuseMessageText)
 
     response.end()
   } else {

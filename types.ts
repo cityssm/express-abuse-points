@@ -17,6 +17,11 @@ export interface AbuseCheckOptions {
   // DEFAULT VALUES
 
   /**
+   * The message to appear when a user is blocked for abuse.
+   */
+  abuseMessageText: string
+
+  /**
    * The default number of points assigned to an abuse event.
    */
   abusePoints: number
