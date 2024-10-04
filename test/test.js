@@ -8,7 +8,7 @@ await describe('express-abuse-points', async () => {
             'x-forwarded-for': '192.168.0.1, 192.168.0.2, 192.168.0.3'
         }
     };
-    before((done) => {
+    before(() => {
         abusePoints.initialize({
             byIP: true,
             byXForwardedFor: true,

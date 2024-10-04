@@ -14,7 +14,7 @@ await describe('express-abuse-points', async () => {
     }
   }
 
-  before((done) => {
+  before(() => {
     abusePoints.initialize({
       byIP: true,
       byXForwardedFor: true,
