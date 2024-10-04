@@ -48,10 +48,10 @@ await describe('express-abuse-points', async () => {
     });
     await it('Records abuse record with using all defaults', () => {
         abusePoints.recordAbuse(fakeRequest);
-        assert.ok('success');
+        assert.ok(true);
     });
     await it('Records abuse record with using no defaults', () => {
         abusePoints.recordAbuse(fakeRequest, 4, 1000);
-        assert.ok('success');
+        assert.ok(true);
     });
 });
