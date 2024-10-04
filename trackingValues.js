@@ -1,12 +1,12 @@
 import { isIPv6 } from 'is-ip';
 const IPV4_WITH_PORT_REGEX = /^(?:[12]?\d{1,2}\.){3}[12]?\d{1,2}(?::\d{1,5})?$/;
-export const isIP4AddressWithPort = (ipAddress) => {
+export function isIP4AddressWithPort(ipAddress) {
     return IPV4_WITH_PORT_REGEX.test(ipAddress);
-};
-export const getIP = (request) => {
+}
+export function getIP(request) {
     return request.ip ?? '';
-};
-export const getXForwardedFor = (request) => {
+}
+export function getXForwardedFor(request) {
     const ipAddresses = request.headers?.['x-forwarded-for'] ?? '';
     const ipAddressesSplit = typeof ipAddresses === 'string' ? ipAddresses.split(/[ ,[\]]/) : ipAddresses;
     for (const ipPiece of ipAddressesSplit) {
@@ -18,4 +18,4 @@ export const getXForwardedFor = (request) => {
         }
     }
     return ipAddresses.toString();
-};
+}

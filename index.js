@@ -1,11 +1,12 @@
-import sqlite3 from 'sqlite3';
+import sqlite from 'better-sqlite3';
+import exitHook from 'exit-hook';
 import { getIP, getXForwardedFor } from './trackingValues.js';
 const OPTIONS_DEFAULT = {
     byIP: true,
     byXForwardedFor: false,
     abusePoints: 1,
-    expiryMillis: 5 * 60 * 1000,
     abusePointsMax: 10,
+    expiryMillis: 5 * 60 * 1000,
     clearIntervalMillis: 60 * 60 * 1000
 };
 Object.freeze(OPTIONS_DEFAULT);
@@ -32,47 +33,54 @@ export function shutdown() {
     catch {
     }
 }
+function initializeDatabase() {
+    if (database !== undefined) {
+        return;
+    }
+    database = sqlite(':memory:');
+    database
+        .prepare(`CREATE TABLE IF NOT EXISTS ${TABLENAME_IP} ${TABLECOLUMNS_CREATE}`)
+        .run();
+    database
+        .prepare(`CREATE TABLE IF NOT EXISTS ${TABLENAME_XFORWARDEDFOR} ${TABLECOLUMNS_CREATE}`)
+        .run();
+}
 export function initialize(optionsUser) {
-    options = Object.assign({}, OPTIONS_DEFAULT, optionsUser);
+    options = { ...OPTIONS_DEFAULT, ...optionsUser };
     if (database === undefined) {
-        database = new sqlite3.Database(':memory:');
-        if (options.byIP) {
-            database.run(`CREATE TABLE IF NOT EXISTS ${TABLENAME_IP} ${TABLECOLUMNS_CREATE}`);
-        }
-        if (options.byXForwardedFor) {
-            database.run(`CREATE TABLE IF NOT EXISTS ${TABLENAME_XFORWARDEDFOR} ${TABLECOLUMNS_CREATE}`);
-        }
+        initializeDatabase();
         clearAbuseIntervalFunction = setInterval(clearExpiredAbuse, options.clearIntervalMillis);
-        const shutdownEvents = ['beforeExit', 'exit', 'SIGINT', 'SIGTERM'];
-        for (const shutdownEvent of shutdownEvents) {
-            process.on(shutdownEvent, shutdown);
-        }
+        exitHook(() => {
+            shutdown();
+        });
     }
     return abuseCheckHandler;
 }
 function clearExpiredAbuse() {
     if (options.byIP && database !== undefined) {
-        database.run(`DELETE FROM ${TABLENAME_IP} WHERE expiryTimeMillis <= ?`, Date.now());
+        database
+            .prepare(`DELETE FROM ${TABLENAME_IP} WHERE expiryTimeMillis <= ?`)
+            .run(Date.now());
     }
     if (options.byXForwardedFor && database !== undefined) {
-        database.run(`DELETE FROM ${TABLENAME_XFORWARDEDFOR} WHERE expiryTimeMillis <= ?`, Date.now());
+        database
+            .prepare(`DELETE FROM ${TABLENAME_XFORWARDEDFOR} WHERE expiryTimeMillis <= ?`)
+            .run(Date.now());
     }
 }
-async function getAbusePoints(tableName, trackingValue) {
-    return await new Promise((resolve, reject) => {
-        database.get(`select sum(abusePoints) as abusePointsSum
-        from ${tableName}
-        where trackingValue = ?
-        and expiryTimeMillis > ?`, trackingValue, Date.now(), (error, row) => {
-            if (error !== null) {
-                reject(error);
-            }
-            resolve(row?.abusePointsSum ?? 0);
-        });
-    });
+function getAbusePoints(tableName, trackingValue) {
+    const row = database
+        ?.prepare(`select sum(abusePoints) as abusePointsSum
+      from ${tableName}
+      where trackingValue = ?
+      and expiryTimeMillis > ?`)
+        .get(trackingValue, Date.now());
+    return row?.abusePointsSum ?? 0;
 }
 function clearAbusePoints(tableName, trackingValue) {
-    database.run(`DELETE FROM ${tableName} WHERE trackingValue = ?`, trackingValue);
+    database
+        ?.prepare(`DELETE FROM ${tableName} WHERE trackingValue = ?`)
+        .run(trackingValue);
 }
 export function clearAbuse(request) {
     if (options.byIP) {
@@ -88,11 +96,11 @@ export function clearAbuse(request) {
         }
     }
 }
-export async function isAbuser(request) {
+export function isAbuser(request) {
     if (options.byIP) {
         const ipAddress = getIP(request);
         if (ipAddress !== '') {
-            const abusePoints = await getAbusePoints(TABLENAME_IP, ipAddress);
+            const abusePoints = getAbusePoints(TABLENAME_IP, ipAddress);
             if (abusePoints >= options.abusePointsMax) {
                 return true;
             }
@@ -101,7 +109,7 @@ export async function isAbuser(request) {
     if (options.byXForwardedFor) {
         const ipAddress = getXForwardedFor(request);
         if (ipAddress !== '') {
-            const abusePoints = await getAbusePoints(TABLENAME_XFORWARDEDFOR, ipAddress);
+            const abusePoints = getAbusePoints(TABLENAME_XFORWARDEDFOR, ipAddress);
             if (abusePoints >= options.abusePointsMax) {
                 return true;
             }
@@ -114,18 +122,22 @@ export function recordAbuse(request, abusePoints = options.abusePoints, expiryMi
     if (options.byIP) {
         const ipAddress = getIP(request);
         if (ipAddress !== '') {
-            database.run(`INSERT INTO ${TABLENAME_IP} ${TABLECOLUMNS_INSERT} VALUES (?, ?, ?)`, ipAddress, expiryTimeMillis, abusePoints);
+            database
+                ?.prepare(`INSERT INTO ${TABLENAME_IP} ${TABLECOLUMNS_INSERT} VALUES (?, ?, ?)`)
+                .run(ipAddress, expiryTimeMillis, abusePoints);
         }
     }
     if (options.byXForwardedFor) {
         const ipAddress = getXForwardedFor(request);
         if (ipAddress !== '') {
-            database.run(`INSERT INTO ${TABLENAME_XFORWARDEDFOR} ${TABLECOLUMNS_INSERT} VALUES (?, ?, ?)`, ipAddress, expiryTimeMillis, abusePoints);
+            database
+                ?.prepare(`INSERT INTO ${TABLENAME_XFORWARDEDFOR} ${TABLECOLUMNS_INSERT} VALUES (?, ?, ?)`)
+                .run(ipAddress, expiryTimeMillis, abusePoints);
         }
     }
 }
-async function abuseCheckHandler(request, response, next) {
-    const isRequestAbuser = await isAbuser(request);
+function abuseCheckHandler(request, response, next) {
+    const isRequestAbuser = isAbuser(request);
     if (isRequestAbuser) {
         response.status(403).send('Access temporarily restricted.');
         response.end();

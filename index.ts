@@ -1,5 +1,6 @@
+import sqlite from 'better-sqlite3'
+import exitHook from 'exit-hook'
 import type express from 'express'
-import sqlite3 from 'sqlite3'
 
 import { getIP, getXForwardedFor } from './trackingValues.js'
 import type { AbuseCheckOptions } from './types.js'
@@ -8,10 +9,16 @@ const OPTIONS_DEFAULT: AbuseCheckOptions = {
   byIP: true,
   byXForwardedFor: false,
 
+  // eslint-disable-next-line @typescript-eslint/no-magic-numbers
   abusePoints: 1,
+
+  // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+  abusePointsMax: 10,
+
+  // eslint-disable-next-line @typescript-eslint/no-magic-numbers
   expiryMillis: 5 * 60 * 1000, // 5 minutes
 
-  abusePointsMax: 10,
+  // eslint-disable-next-line @typescript-eslint/no-magic-numbers
   clearIntervalMillis: 60 * 60 * 1000 // 1 hour
 }
 
@@ -26,12 +33,19 @@ const TABLECOLUMNS_CREATE =
 const TABLECOLUMNS_INSERT = '(trackingValue, expiryTimeMillis, abusePoints)'
 
 let options: AbuseCheckOptions = OPTIONS_DEFAULT
-let database: sqlite3.Database
 
-let clearAbuseIntervalFunction: NodeJS.Timeout
+// eslint-disable-next-line @typescript-eslint/init-declarations
+let database: sqlite.Database | undefined
 
+// eslint-disable-next-line @typescript-eslint/init-declarations
+let clearAbuseIntervalFunction: NodeJS.Timeout | undefined
+
+/**
+ * Cleans up handler.
+ */
 export function shutdown(): void {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (clearAbuseIntervalFunction !== undefined) {
       clearInterval(clearAbuseIntervalFunction)
     }
@@ -40,6 +54,7 @@ export function shutdown(): void {
   }
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (database !== undefined) {
       database.close()
     }
@@ -48,36 +63,47 @@ export function shutdown(): void {
   }
 }
 
+function initializeDatabase(): void {
+  if (database !== undefined) {
+    return
+  }
+
+  database = sqlite(':memory:')
+
+  database
+    .prepare(
+      `CREATE TABLE IF NOT EXISTS ${TABLENAME_IP} ${TABLECOLUMNS_CREATE}`
+    )
+    .run()
+
+  database
+    .prepare(
+      `CREATE TABLE IF NOT EXISTS ${TABLENAME_XFORWARDEDFOR} ${TABLECOLUMNS_CREATE}`
+    )
+    .run()
+}
+
+/**
+ * Initializes the middleware.
+ * @param optionsUser - The options.
+ * @returns The Express middleware.
+ */
 export function initialize(
   optionsUser?: Partial<AbuseCheckOptions>
 ): express.RequestHandler {
-  options = Object.assign({}, OPTIONS_DEFAULT, optionsUser)
+  options = { ...OPTIONS_DEFAULT, ...optionsUser }
 
   if (database === undefined) {
-    database = new sqlite3.Database(':memory:')
-
-    if (options.byIP) {
-      database.run(
-        `CREATE TABLE IF NOT EXISTS ${TABLENAME_IP} ${TABLECOLUMNS_CREATE}`
-      )
-    }
-
-    if (options.byXForwardedFor) {
-      database.run(
-        `CREATE TABLE IF NOT EXISTS ${TABLENAME_XFORWARDEDFOR} ${TABLECOLUMNS_CREATE}`
-      )
-    }
+    initializeDatabase()
 
     clearAbuseIntervalFunction = setInterval(
       clearExpiredAbuse,
       options.clearIntervalMillis
     )
 
-    const shutdownEvents = ['beforeExit', 'exit', 'SIGINT', 'SIGTERM']
-
-    for (const shutdownEvent of shutdownEvents) {
-      process.on(shutdownEvent, shutdown)
-    }
+    exitHook(() => {
+      shutdown()
+    })
   }
 
   return abuseCheckHandler as express.RequestHandler
@@ -85,52 +111,42 @@ export function initialize(
 
 function clearExpiredAbuse(): void {
   if (options.byIP && database !== undefined) {
-    database.run(
-      `DELETE FROM ${TABLENAME_IP} WHERE expiryTimeMillis <= ?`,
-      Date.now()
-    )
+    database
+      .prepare(`DELETE FROM ${TABLENAME_IP} WHERE expiryTimeMillis <= ?`)
+      .run(Date.now())
   }
 
   if (options.byXForwardedFor && database !== undefined) {
-    database.run(
-      `DELETE FROM ${TABLENAME_XFORWARDEDFOR} WHERE expiryTimeMillis <= ?`,
-      Date.now()
-    )
+    database
+      .prepare(
+        `DELETE FROM ${TABLENAME_XFORWARDEDFOR} WHERE expiryTimeMillis <= ?`
+      )
+      .run(Date.now())
   }
 }
 
-async function getAbusePoints(
-  tableName: TABLENAME,
-  trackingValue: string
-): Promise<number> {
-  return await new Promise((resolve, reject) => {
-    database.get(
+function getAbusePoints(tableName: TABLENAME, trackingValue: string): number {
+  const row = database
+    ?.prepare(
       `select sum(abusePoints) as abusePointsSum
-        from ${tableName}
-        where trackingValue = ?
-        and expiryTimeMillis > ?`,
-      trackingValue,
-      Date.now(),
-      (error: unknown, row: { abusePointsSum?: number }) => {
-        if (error !== null) {
-          reject(error)
-        }
-
-        resolve(row?.abusePointsSum ?? 0)
-      }
+      from ${tableName}
+      where trackingValue = ?
+      and expiryTimeMillis > ?`
     )
-  })
+    .get(trackingValue, Date.now()) as { abusePointsSum?: number } | undefined
+
+  return row?.abusePointsSum ?? 0
 }
 
 function clearAbusePoints(tableName: TABLENAME, trackingValue: string): void {
-  database.run(
-    `DELETE FROM ${tableName} WHERE trackingValue = ?`,
-    trackingValue
-  )
+  database
+    ?.prepare(`DELETE FROM ${tableName} WHERE trackingValue = ?`)
+    .run(trackingValue)
 }
 
 /**
  * Clears all abuse records from a requestor, expired or not.
+ * @param request - The Express request.
  */
 export function clearAbuse(request: Partial<express.Request>): void {
   if (options.byIP) {
@@ -152,15 +168,15 @@ export function clearAbuse(request: Partial<express.Request>): void {
 
 /**
  * Checks if the current requestor is considered from an abusive source.
+ * @param request - The Express request.
+ * @returns `true` if the requestor is considered an abusive source.
  */
-export async function isAbuser(
-  request: Partial<express.Request>
-): Promise<boolean> {
+export function isAbuser(request: Partial<express.Request>): boolean {
   if (options.byIP) {
     const ipAddress = getIP(request)
 
     if (ipAddress !== '') {
-      const abusePoints = await getAbusePoints(TABLENAME_IP, ipAddress)
+      const abusePoints = getAbusePoints(TABLENAME_IP, ipAddress)
 
       if (abusePoints >= options.abusePointsMax) {
         return true
@@ -172,10 +188,7 @@ export async function isAbuser(
     const ipAddress = getXForwardedFor(request)
 
     if (ipAddress !== '') {
-      const abusePoints = await getAbusePoints(
-        TABLENAME_XFORWARDEDFOR,
-        ipAddress
-      )
+      const abusePoints = getAbusePoints(TABLENAME_XFORWARDEDFOR, ipAddress)
 
       if (abusePoints >= options.abusePointsMax) {
         return true
@@ -188,6 +201,9 @@ export async function isAbuser(
 
 /**
  * Adds a new abuse record.
+ * @param request - The Express request.
+ * @param abusePoints - The number of abuse points to apply.
+ * @param expiryMillis - The length of time in milliseconds until the abuse points expire.
  */
 export function recordAbuse(
   request: Partial<express.Request>,
@@ -200,12 +216,11 @@ export function recordAbuse(
     const ipAddress = getIP(request)
 
     if (ipAddress !== '') {
-      database.run(
-        `INSERT INTO ${TABLENAME_IP} ${TABLECOLUMNS_INSERT} VALUES (?, ?, ?)`,
-        ipAddress,
-        expiryTimeMillis,
-        abusePoints
-      )
+      database
+        ?.prepare(
+          `INSERT INTO ${TABLENAME_IP} ${TABLECOLUMNS_INSERT} VALUES (?, ?, ?)`
+        )
+        .run(ipAddress, expiryTimeMillis, abusePoints)
     }
   }
 
@@ -213,26 +228,27 @@ export function recordAbuse(
     const ipAddress = getXForwardedFor(request)
 
     if (ipAddress !== '') {
-      database.run(
-        `INSERT INTO ${TABLENAME_XFORWARDEDFOR} ${TABLECOLUMNS_INSERT} VALUES (?, ?, ?)`,
-        ipAddress,
-        expiryTimeMillis,
-        abusePoints
-      )
+      database
+        ?.prepare(
+          `INSERT INTO ${TABLENAME_XFORWARDEDFOR} ${TABLECOLUMNS_INSERT} VALUES (?, ?, ?)`
+        )
+        .run(ipAddress, expiryTimeMillis, abusePoints)
     }
   }
 }
 
 /**
- * Middleware setup function
+ * Middleware handler function
+ * @param request - The Express request.
+ * @param response - The Express response.
+ * @param next - The Express next function.
  */
-
-async function abuseCheckHandler(
+function abuseCheckHandler(
   request: express.Request,
   response: express.Response,
   next: express.NextFunction
-): Promise<void> {
-  const isRequestAbuser = await isAbuser(request)
+): void {
+  const isRequestAbuser = isAbuser(request)
 
   if (isRequestAbuser) {
     response.status(403).send('Access temporarily restricted.')
@@ -243,6 +259,11 @@ async function abuseCheckHandler(
   }
 }
 
+/**
+ * Middleware setup function.
+ * @param optionsUser - The options.
+ * @returns - The middleware handler function.
+ */
 export function abuseCheck(
   optionsUser?: AbuseCheckOptions
 ): express.RequestHandler {

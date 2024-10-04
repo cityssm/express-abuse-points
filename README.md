@@ -29,18 +29,18 @@ to enforce the block as soon as possible.
 ### Initializing
 
 ```javascript
-import { abuseCheck } from "@cityssm/express-abuse-points";
+import { abuseCheck } from '@cityssm/express-abuse-points'
 
-app.use(abuseCheck());
+app.use(abuseCheck())
 ```
 
 ### Recording Abuse
 
 ```javascript
-import { recordAbuse } from "@cityssm/express-abuse-points";
+import { recordAbuse } from '@cityssm/express-abuse-points'
 
 if (userDidSomethingBad) {
-  recordAbuse(req, 3);
+  recordAbuse(req, 3)
 }
 ```
 

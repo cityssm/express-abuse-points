@@ -5,12 +5,12 @@ export interface AbuseCheckOptions {
   // TRACKING TYPES
 
   /**
-   * Whether or not abuse points should be tracked by IP address.
+   * Whether abuse points should be tracked by IP address.
    */
   byIP: boolean
 
   /**
-   * Whether or not abuse points should be tracked by the X-Forwarded-For header.
+   * Whether abuse points should be tracked by the X-Forwarded-For header.
    */
   byXForwardedFor: boolean
 

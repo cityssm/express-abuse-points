@@ -1,6 +1,7 @@
 import assert from 'node:assert';
+import { after, before, describe, it } from 'node:test';
 import * as abusePoints from '../index.js';
-describe('express-abuse-points', () => {
+await describe('express-abuse-points', async () => {
     const fakeRequest = {
         ip: '127.0.0.1',
         headers: {
@@ -12,49 +13,42 @@ describe('express-abuse-points', () => {
             byIP: true,
             byXForwardedFor: true,
             abusePointsMax: 10,
-            expiryMillis: 10000,
+            expiryMillis: 10_000,
             clearIntervalMillis: 5000
         });
-        setTimeout(done, 1000);
     });
     after(() => {
         abusePoints.shutdown();
     });
-    it('Has access initially', async () => {
-        const isAbuser = await abusePoints.isAbuser(fakeRequest);
+    await it('Has access initially', () => {
+        const isAbuser = abusePoints.isAbuser(fakeRequest);
         assert.strictEqual(isAbuser, false);
     });
-    it('Still has access after one abuse record with less points than the max', async () => {
+    await it('Still has access after one abuse record with less points than the max', () => {
         abusePoints.recordAbuse(fakeRequest, 4);
-        const isAbuser = await abusePoints.isAbuser(fakeRequest);
+        const isAbuser = abusePoints.isAbuser(fakeRequest);
         assert.strictEqual(isAbuser, false);
     });
-    it('Still has access after two abuse records with less points than the max', async () => {
+    await it('Still has access after two abuse records with less points than the max', () => {
         abusePoints.recordAbuse(fakeRequest, 4);
-        const isAbuser = await abusePoints.isAbuser(fakeRequest);
+        const isAbuser = abusePoints.isAbuser(fakeRequest);
         assert.strictEqual(isAbuser, false);
     });
-    it('No longer has access after three abuse records summing more than the max', (done) => {
+    await it('No longer has access after three abuse records summing more than the max', () => {
         abusePoints.recordAbuse(fakeRequest, 4);
-        setTimeout(async () => {
-            const isAbuser = await abusePoints.isAbuser(fakeRequest);
-            assert.strictEqual(isAbuser, true);
-            done();
-        }, 500);
+        const isAbuser = abusePoints.isAbuser(fakeRequest);
+        assert.strictEqual(isAbuser, true);
     });
-    it('Regains access after clearing all records', (done) => {
+    await it('Regains access after clearing all records', () => {
         abusePoints.clearAbuse(fakeRequest);
-        setTimeout(async () => {
-            const isAbuser = await abusePoints.isAbuser(fakeRequest);
-            assert.strictEqual(isAbuser, false);
-            done();
-        }, 500);
+        const isAbuser = abusePoints.isAbuser(fakeRequest);
+        assert.strictEqual(isAbuser, false);
     });
-    it('Records abuse record with using all defaults', () => {
+    await it('Records abuse record with using all defaults', () => {
         abusePoints.recordAbuse(fakeRequest);
         assert.ok('success');
     });
-    it('Records abuse record with using no defaults', () => {
+    await it('Records abuse record with using no defaults', () => {
         abusePoints.recordAbuse(fakeRequest, 4, 1000);
         assert.ok('success');
     });

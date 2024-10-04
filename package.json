@@ -1,15 +1,15 @@
 {
   "name": "@cityssm/express-abuse-points",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Express.js middleware for tracking and blocking abusive behaviour.",
   "type": "module",
   "exports": "./index.js",
   "engines": {
-    "node": "^14.13.1 || >=16.0.0"
+    "node": ">=18.0.0"
   },
   "scripts": {
-    "test": "mocha --timeout 7000",
-    "coverage": "c8 mocha --timeout 7000"
+    "test": "node --test",
+    "coverage": "c8 node --test"
   },
   "repository": {
     "type": "git",
@@ -30,14 +30,16 @@
   },
   "homepage": "https://github.com/cityssm/express-abuse-points#readme",
   "devDependencies": {
-    "@types/express": "^4.17.21",
-    "@types/mocha": "^10.0.6",
-    "@types/sqlite3": "^3.1.11",
-    "eslint-config-cityssm": "^1.5.0"
+    "@types/better-sqlite3": "^7.6.11",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.7.4",
+    "eslint-config-cityssm": "^10.1.1",
+    "prettier-config-cityssm": "^1.0.0"
   },
   "dependencies": {
-    "express": "^4.19.2",
-    "is-ip": "^5.0.1",
-    "sqlite3": "^5.1.7"
+    "better-sqlite3": "^11.3.0",
+    "exit-hook": "^4.0.0",
+    "express": "^4.21.0",
+    "is-ip": "^5.0.1"
   }
 }
