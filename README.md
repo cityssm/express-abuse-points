@@ -2,7 +2,6 @@
 
 [![npm](https://img.shields.io/npm/v/@cityssm/express-abuse-points)](https://www.npmjs.com/package/@cityssm/express-abuse-points)
 [![DeepSource](https://app.deepsource.com/gh/cityssm/express-abuse-points.svg/?label=active+issues&show_trend=true&token=yB1nguIDLwV_FPUHv4zjmIF_)](https://app.deepsource.com/gh/cityssm/express-abuse-points/)
-[![Code Climate maintainability](https://img.shields.io/codeclimate/maintainability/cityssm/express-abuse-points)](https://codeclimate.com/github/cityssm/express-abuse-points)
 [![codecov](https://codecov.io/gh/cityssm/express-abuse-points/graph/badge.svg?token=TSFEM1DXCF)](https://codecov.io/gh/cityssm/express-abuse-points)
 [![Coverage Testing](https://github.com/cityssm/express-abuse-points/actions/workflows/coverage.yml/badge.svg)](https://github.com/cityssm/express-abuse-points/actions/workflows/coverage.yml)
 

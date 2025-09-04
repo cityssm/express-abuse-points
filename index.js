@@ -1,3 +1,4 @@
+import { minutesToMillis } from '@cityssm/to-millis';
 import sqlite from 'better-sqlite3';
 import exitHook from 'exit-hook';
 import { getIP, getXForwardedFor } from './trackingValues.js';
@@ -5,14 +6,10 @@ const OPTIONS_DEFAULT = {
     byIP: true,
     byXForwardedFor: false,
     abuseMessageText: 'Access temporarily restricted.',
-    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
     abusePoints: 1,
-    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
     abusePointsMax: 10,
-    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-    expiryMillis: 5 * 60 * 1000, // 5 minutes
-    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-    clearIntervalMillis: 60 * 60 * 1000 // 1 hour
+    clearIntervalMillis: minutesToMillis(60),
+    expiryMillis: minutesToMillis(5)
 };
 Object.freeze(OPTIONS_DEFAULT);
 const TABLENAME_IP = 'AbusePoints_IP';
@@ -20,16 +17,13 @@ const TABLENAME_XFORWARDEDFOR = 'AbusePoints_XForwardedFor';
 const TABLECOLUMNS_CREATE = '(trackingValue TEXT, expiryTimeMillis INT UNSIGNED, abusePoints TINYINT UNSIGNED)';
 const TABLECOLUMNS_INSERT = '(trackingValue, expiryTimeMillis, abusePoints)';
 let options = OPTIONS_DEFAULT;
-// eslint-disable-next-line @typescript-eslint/init-declarations
 let database;
-// eslint-disable-next-line @typescript-eslint/init-declarations
 let clearAbuseIntervalFunction;
 /**
  * Cleans up handler.
  */
 export function shutdown() {
     try {
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (clearAbuseIntervalFunction !== undefined) {
             clearInterval(clearAbuseIntervalFunction);
         }
@@ -38,7 +32,6 @@ export function shutdown() {
         // ignore
     }
     try {
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (database !== undefined) {
             database.close();
         }
@@ -88,13 +81,14 @@ function clearExpiredAbuse() {
     }
 }
 function getAbusePoints(tableName, trackingValue) {
-    const row = database
+    const points = database
         ?.prepare(`select sum(abusePoints) as abusePointsSum
-      from ${tableName}
-      where trackingValue = ?
-      and expiryTimeMillis > ?`)
+        from ${tableName}
+        where trackingValue = ?
+        and expiryTimeMillis > ?`)
+        .pluck()
         .get(trackingValue, Date.now());
-    return row?.abusePointsSum ?? 0;
+    return points ?? 0;
 }
 function clearAbusePoints(tableName, trackingValue) {
     database
@@ -196,10 +190,10 @@ export function abuseCheck(optionsUser) {
     return abuseCheckHandler;
 }
 export default {
-    initialize,
-    shutdown,
-    recordAbuse,
-    isAbuser,
+    abuseCheck,
     clearAbuse,
-    abuseCheck
+    initialize,
+    isAbuser,
+    recordAbuse,
+    shutdown
 };

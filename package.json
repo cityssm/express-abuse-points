@@ -2,19 +2,6 @@
   "name": "@cityssm/express-abuse-points",
   "version": "3.0.0",
   "description": "Express.js middleware for tracking and blocking abusive behaviour.",
-  "type": "module",
-  "exports": "./index.js",
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "scripts": {
-    "test": "node --test",
-    "coverage": "c8 node --test"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/cityssm/express-abuse-points.git"
-  },
   "keywords": [
     "express",
     "expressjs",
@@ -23,23 +10,37 @@
     "abuse",
     "block"
   ],
-  "author": "The Corporation of the City of Sault Ste. Marie",
-  "license": "MIT",
+  "homepage": "https://github.com/cityssm/express-abuse-points#readme",
   "bugs": {
     "url": "https://github.com/cityssm/express-abuse-points/issues"
   },
-  "homepage": "https://github.com/cityssm/express-abuse-points#readme",
-  "devDependencies": {
-    "@types/better-sqlite3": "^7.6.11",
-    "@types/express": "^5.0.0",
-    "@types/node": "^22.7.4",
-    "eslint-config-cityssm": "^10.1.1",
-    "prettier-config-cityssm": "^1.0.0"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cityssm/express-abuse-points.git"
+  },
+  "license": "MIT",
+  "author": "The Corporation of the City of Sault Ste. Marie",
+  "type": "module",
+  "exports": "./index.js",
+  "scripts": {
+    "coverage": "c8 node --test",
+    "test": "node --test"
   },
   "dependencies": {
-    "better-sqlite3": "^11.3.0",
+    "@cityssm/to-millis": "^1.0.1",
+    "better-sqlite3": "^12.2.0",
     "exit-hook": "^4.0.0",
-    "express": "^4.21.0",
+    "express": "^5.1.0",
     "is-ip": "^5.0.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.3.1",
+    "eslint-config-cityssm": "^28.0.0",
+    "prettier-config-cityssm": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

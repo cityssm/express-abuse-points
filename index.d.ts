@@ -33,13 +33,13 @@ export declare function recordAbuse(request: Partial<express.Request>, abusePoin
  * @param optionsUser - The options.
  * @returns - The middleware handler function.
  */
-export declare function abuseCheck(optionsUser?: AbuseCheckOptions): express.RequestHandler;
+export declare function abuseCheck(optionsUser?: Partial<AbuseCheckOptions>): express.RequestHandler;
 declare const _default: {
-    initialize: typeof initialize;
-    shutdown: typeof shutdown;
-    recordAbuse: typeof recordAbuse;
-    isAbuser: typeof isAbuser;
-    clearAbuse: typeof clearAbuse;
     abuseCheck: typeof abuseCheck;
+    clearAbuse: typeof clearAbuse;
+    initialize: typeof initialize;
+    isAbuser: typeof isAbuser;
+    recordAbuse: typeof recordAbuse;
+    shutdown: typeof shutdown;
 };
 export default _default;

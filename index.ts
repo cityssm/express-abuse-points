@@ -1,3 +1,4 @@
+import { minutesToMillis } from '@cityssm/to-millis'
 import sqlite from 'better-sqlite3'
 import exitHook from 'exit-hook'
 import type express from 'express'
@@ -11,17 +12,11 @@ const OPTIONS_DEFAULT: AbuseCheckOptions = {
 
   abuseMessageText: 'Access temporarily restricted.',
 
-  // eslint-disable-next-line @typescript-eslint/no-magic-numbers
   abusePoints: 1,
-
-  // eslint-disable-next-line @typescript-eslint/no-magic-numbers
   abusePointsMax: 10,
 
-  // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-  expiryMillis: 5 * 60 * 1000, // 5 minutes
-
-  // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-  clearIntervalMillis: 60 * 60 * 1000 // 1 hour
+  clearIntervalMillis: minutesToMillis(60),
+  expiryMillis: minutesToMillis(5)
 }
 
 Object.freeze(OPTIONS_DEFAULT)
@@ -36,10 +31,8 @@ const TABLECOLUMNS_INSERT = '(trackingValue, expiryTimeMillis, abusePoints)'
 
 let options: AbuseCheckOptions = OPTIONS_DEFAULT
 
-// eslint-disable-next-line @typescript-eslint/init-declarations
 let database: sqlite.Database | undefined
 
-// eslint-disable-next-line @typescript-eslint/init-declarations
 let clearAbuseIntervalFunction: NodeJS.Timeout | undefined
 
 /**
@@ -47,7 +40,6 @@ let clearAbuseIntervalFunction: NodeJS.Timeout | undefined
  */
 export function shutdown(): void {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (clearAbuseIntervalFunction !== undefined) {
       clearInterval(clearAbuseIntervalFunction)
     }
@@ -56,7 +48,6 @@ export function shutdown(): void {
   }
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (database !== undefined) {
       database.close()
     }
@@ -128,16 +119,17 @@ function clearExpiredAbuse(): void {
 }
 
 function getAbusePoints(tableName: TABLENAME, trackingValue: string): number {
-  const row = database
+  const points = database
     ?.prepare(
       `select sum(abusePoints) as abusePointsSum
-      from ${tableName}
-      where trackingValue = ?
-      and expiryTimeMillis > ?`
+        from ${tableName}
+        where trackingValue = ?
+        and expiryTimeMillis > ?`
     )
-    .get(trackingValue, Date.now()) as { abusePointsSum?: number } | undefined
+    .pluck()
+    .get(trackingValue, Date.now()) as number | undefined
 
-  return row?.abusePointsSum ?? 0
+  return points ?? 0
 }
 
 function clearAbusePoints(tableName: TABLENAME, trackingValue: string): void {
@@ -267,17 +259,17 @@ function abuseCheckHandler(
  * @returns - The middleware handler function.
  */
 export function abuseCheck(
-  optionsUser?: AbuseCheckOptions
+  optionsUser?: Partial<AbuseCheckOptions>
 ): express.RequestHandler {
   initialize(optionsUser)
   return abuseCheckHandler as express.RequestHandler
 }
 
 export default {
-  initialize,
-  shutdown,
-  recordAbuse,
-  isAbuser,
+  abuseCheck,
   clearAbuse,
-  abuseCheck
+  initialize,
+  isAbuser,
+  recordAbuse,
+  shutdown
 }

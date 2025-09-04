@@ -9,6 +9,7 @@ import * as abusePoints from '../index.js'
 await describe('express-abuse-points', async () => {
   const fakeRequest = {
     ip: '127.0.0.1',
+
     headers: {
       'x-forwarded-for': '192.168.0.1, 192.168.0.2, 192.168.0.3'
     }
