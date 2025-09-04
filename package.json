@@ -1,6 +1,6 @@
 {
   "name": "@cityssm/express-abuse-points",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Express.js middleware for tracking and blocking abusive behaviour.",
   "keywords": [
     "express",
