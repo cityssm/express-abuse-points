@@ -37,7 +37,7 @@
     "@types/better-sqlite3": "^7.6.13",
     "@types/express": "^5.0.3",
     "@types/node": "^24.3.1",
-    "eslint-config-cityssm": "^28.0.0",
+    "eslint-config-cityssm": "^33.2.1",
     "prettier-config-cityssm": "^1.0.0"
   },
   "engines": {
