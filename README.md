@@ -23,8 +23,8 @@ npm install @cityssm/express-abuse-points
 
 ## Usage
 
-It is recommended to include the middleware as early as possible in the middleware chain
-to enforce the block as soon as possible.
+It is recommended to include the middleware as early as possible in the
+middleware chain to enforce the block as soon as possible.
 
 ### Initializing
 
@@ -77,4 +77,5 @@ Returns `true` if the given requestor has reached the abuse points threshold.
 ### `clearAbuse(req: Request)`
 
 Clears all abuse records for the given requestor, expired or not.
-Helpful if, for example, abuse was tracked for incorrect password attempts, but the user was finally successful.
+Helpful if, for example, abuse was tracked for incorrect password attempts,
+but the user was finally successful.

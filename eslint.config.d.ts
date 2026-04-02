@@ -1,2 +1,2 @@
-export declare const config: import("eslint").Linter.Config<import("eslint").Linter.RulesRecord>[];
+export declare const config: import("eslint-config-cityssm").Config[];
 export default config;
