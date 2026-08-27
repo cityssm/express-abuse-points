@@ -49,7 +49,7 @@
     "prettier-config-cityssm": "^2.2.0"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.0.0"
   },
   "allowScripts": {
     "better-sqlite3@13.0.3": true
