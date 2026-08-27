@@ -24,10 +24,17 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: 'npm'
 
-      - name: Install Package
-        run: |
-          npm ci
-          npm install -g c8
+      - name: Install Global Dependencies
+        run: npm install -g c8
+
+      - name: Install Application (CI)
+        id: installCi
+        continue-on-error: true
+        run: npm ci
+
+      - name: Install Application (Install)
+        if: steps.installCi.outcome == 'failure'
+        run: npm install
 
       - name: Run Coverage Testing
         run: npm run coverage

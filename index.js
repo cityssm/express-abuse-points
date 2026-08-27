@@ -188,6 +188,7 @@ export function recordAbuse(request, abusePoints = options.abusePoints, expiryMi
         const ipAddress = getXForwardedFor(request);
         if (ipAddress !== '') {
             database
+                // eslint-disable-next-line sqlite-security/no-unsafe-query
                 ?.prepare(/* sql */ `
           INSERT INTO
             ${tableNameXForwardedFor} ${tableColumnsInsert}
