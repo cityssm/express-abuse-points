@@ -12,10 +12,11 @@ const OPTIONS_DEFAULT = {
     expiryMillis: minutesToMillis(5)
 };
 Object.freeze(OPTIONS_DEFAULT);
-const TABLENAME_IP = 'AbusePoints_IP';
-const TABLENAME_XFORWARDEDFOR = 'AbusePoints_XForwardedFor';
-const TABLECOLUMNS_CREATE = '(trackingValue TEXT, expiryTimeMillis INT UNSIGNED, abusePoints TINYINT UNSIGNED)';
-const TABLECOLUMNS_INSERT = '(trackingValue, expiryTimeMillis, abusePoints)';
+const tableNameIP = 'AbusePoints_IP';
+const tableNameXForwardedFor = 'AbusePoints_XForwardedFor';
+const tableColumnsCreate = 
+/* sql */ '(trackingValue TEXT, expiryTimeMillis INT UNSIGNED, abusePoints TINYINT UNSIGNED)';
+const tableColumnsInsert = '(trackingValue, expiryTimeMillis, abusePoints)';
 let options = OPTIONS_DEFAULT;
 let database;
 let clearAbuseIntervalFunction;
@@ -46,10 +47,10 @@ function initializeDatabase() {
     }
     database = sqlite(':memory:');
     database
-        .prepare(`CREATE TABLE IF NOT EXISTS ${TABLENAME_IP} ${TABLECOLUMNS_CREATE}`)
+        .prepare(`CREATE TABLE IF NOT EXISTS ${tableNameIP} ${tableColumnsCreate}`)
         .run();
     database
-        .prepare(`CREATE TABLE IF NOT EXISTS ${TABLENAME_XFORWARDEDFOR} ${TABLECOLUMNS_CREATE}`)
+        .prepare(`CREATE TABLE IF NOT EXISTS ${tableNameXForwardedFor} ${tableColumnsCreate}`)
         .run();
 }
 /**
@@ -71,28 +72,50 @@ export function initialize(optionsUser) {
 function clearExpiredAbuse() {
     if (options.byIP && database !== undefined) {
         database
-            .prepare(`DELETE FROM ${TABLENAME_IP} WHERE expiryTimeMillis <= ?`)
+            // eslint-disable-next-line sqlite-security/no-unsafe-query
+            .prepare(/* sql */ `
+        DELETE FROM ${tableNameIP}
+        WHERE
+          expiryTimeMillis <= ?
+      `)
             .run(Date.now());
     }
     if (options.byXForwardedFor && database !== undefined) {
         database
-            .prepare(`DELETE FROM ${TABLENAME_XFORWARDEDFOR} WHERE expiryTimeMillis <= ?`)
+            // eslint-disable-next-line sqlite-security/no-unsafe-query
+            .prepare(/* sql */ `
+        DELETE FROM ${tableNameXForwardedFor}
+        WHERE
+          expiryTimeMillis <= ?
+      `)
             .run(Date.now());
     }
 }
 function getAbusePoints(tableName, trackingValue) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const points = database
-        ?.prepare(`select sum(abusePoints) as abusePointsSum
-        from ${tableName}
-        where trackingValue = ?
-        and expiryTimeMillis > ?`)
+        // eslint-disable-next-line sqlite-security/no-unsafe-query
+        ?.prepare(/* sql */ `
+      SELECT
+        SUM(abusePoints) AS abusePointsSum
+      FROM
+        ${tableName}
+      WHERE
+        trackingValue = ?
+        AND expiryTimeMillis > ?
+    `)
         .pluck()
         .get(trackingValue, Date.now());
     return points ?? 0;
 }
 function clearAbusePoints(tableName, trackingValue) {
     database
-        ?.prepare(`DELETE FROM ${tableName} WHERE trackingValue = ?`)
+        // eslint-disable-next-line sqlite-security/no-unsafe-query
+        ?.prepare(/* sql */ `
+      DELETE FROM ${tableName}
+      WHERE
+        trackingValue = ?
+    `)
         .run(trackingValue);
 }
 /**
@@ -103,13 +126,13 @@ export function clearAbuse(request) {
     if (options.byIP) {
         const ipAddress = getIP(request);
         if (ipAddress !== '') {
-            clearAbusePoints(TABLENAME_IP, ipAddress);
+            clearAbusePoints(tableNameIP, ipAddress);
         }
     }
     if (options.byXForwardedFor) {
         const ipAddress = getXForwardedFor(request);
         if (ipAddress !== '') {
-            clearAbusePoints(TABLENAME_XFORWARDEDFOR, ipAddress);
+            clearAbusePoints(tableNameXForwardedFor, ipAddress);
         }
     }
 }
@@ -122,7 +145,7 @@ export function isAbuser(request) {
     if (options.byIP) {
         const ipAddress = getIP(request);
         if (ipAddress !== '') {
-            const abusePoints = getAbusePoints(TABLENAME_IP, ipAddress);
+            const abusePoints = getAbusePoints(tableNameIP, ipAddress);
             if (abusePoints >= options.abusePointsMax) {
                 return true;
             }
@@ -131,7 +154,7 @@ export function isAbuser(request) {
     if (options.byXForwardedFor) {
         const ipAddress = getXForwardedFor(request);
         if (ipAddress !== '') {
-            const abusePoints = getAbusePoints(TABLENAME_XFORWARDEDFOR, ipAddress);
+            const abusePoints = getAbusePoints(tableNameXForwardedFor, ipAddress);
             if (abusePoints >= options.abusePointsMax) {
                 return true;
             }
@@ -151,7 +174,13 @@ export function recordAbuse(request, abusePoints = options.abusePoints, expiryMi
         const ipAddress = getIP(request);
         if (ipAddress !== '') {
             database
-                ?.prepare(`INSERT INTO ${TABLENAME_IP} ${TABLECOLUMNS_INSERT} VALUES (?, ?, ?)`)
+                // eslint-disable-next-line sqlite-security/no-unsafe-query
+                ?.prepare(/* sql */ `
+          INSERT INTO
+            ${tableNameIP} ${tableColumnsInsert}
+          VALUES
+            (?, ?, ?)
+        `)
                 .run(ipAddress, expiryTimeMillis, abusePoints);
         }
     }
@@ -159,7 +188,12 @@ export function recordAbuse(request, abusePoints = options.abusePoints, expiryMi
         const ipAddress = getXForwardedFor(request);
         if (ipAddress !== '') {
             database
-                ?.prepare(`INSERT INTO ${TABLENAME_XFORWARDEDFOR} ${TABLECOLUMNS_INSERT} VALUES (?, ?, ?)`)
+                ?.prepare(/* sql */ `
+          INSERT INTO
+            ${tableNameXForwardedFor} ${tableColumnsInsert}
+          VALUES
+            (?, ?, ?)
+        `)
                 .run(ipAddress, expiryTimeMillis, abusePoints);
         }
     }

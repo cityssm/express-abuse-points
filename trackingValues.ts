@@ -1,7 +1,6 @@
 import type { Request } from 'express'
 import { isIPv6 } from 'is-ip'
 
-// eslint-disable-next-line security/detect-unsafe-regex
 const IPV4_WITH_PORT_REGEX = /^(?:[12]?\d{1,2}\.){3}[12]?\d{1,2}(?::\d{1,5})?$/
 
 /**
@@ -37,7 +36,7 @@ export function getXForwardedFor(request: Partial<Request>): string {
   for (const ipPiece of ipAddressesSplit) {
     if (isIP4AddressWithPort(ipPiece)) {
       // Strip off possible port
-      return ipPiece.split(':')[0]
+      return ipPiece.split(':', 1)[0]
     } else if (isIPv6(ipPiece)) {
       return ipPiece
     }

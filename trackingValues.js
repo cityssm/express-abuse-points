@@ -1,5 +1,4 @@
 import { isIPv6 } from 'is-ip';
-// eslint-disable-next-line security/detect-unsafe-regex
 const IPV4_WITH_PORT_REGEX = /^(?:[12]?\d{1,2}\.){3}[12]?\d{1,2}(?::\d{1,5})?$/;
 /**
  * Tests if an IP address is an IPV4 address with port.
@@ -29,7 +28,7 @@ export function getXForwardedFor(request) {
     for (const ipPiece of ipAddressesSplit) {
         if (isIP4AddressWithPort(ipPiece)) {
             // Strip off possible port
-            return ipPiece.split(':')[0];
+            return ipPiece.split(':', 1)[0];
         }
         else if (isIPv6(ipPiece)) {
             return ipPiece;

@@ -36,19 +36,22 @@
   },
   "dependencies": {
     "@cityssm/to-millis": "^1.0.1",
-    "better-sqlite3": "^12.8.0",
+    "better-sqlite3": "^13.0.3",
     "exit-hook": "^5.1.0",
     "express": "^5.2.1",
     "is-ip": "^5.0.1"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.13",
+    "@types/better-sqlite3": "^9.6.0",
     "@types/express": "^5.0.6",
-    "@types/node": "^25.5.0",
-    "eslint-config-cityssm": "^39.0.0",
-    "prettier-config-cityssm": "^2.1.2"
+    "@types/node": "^26.4.0",
+    "eslint-config-cityssm": "^48.1.0",
+    "prettier-config-cityssm": "^2.2.0"
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "allowScripts": {
+    "better-sqlite3@13.0.3": true
   }
 }

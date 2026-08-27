@@ -64,11 +64,11 @@ It accepts the following options.
 
 The function to include in the Express handlers to record abusive behaviours.
 
-An optional `abusePoints` parameter is available if the record should have more or less weight than
-the default `abusePoints`.
+An optional `abusePoints` parameter is available if the record should have
+more or less weight than the default `abusePoints`.
 
-An optional `expiryMillis` parameter is available if the record should expiry sooner or later than
-the default `expiryMillis`.
+An optional `expiryMillis` parameter is available if the record should expire
+sooner or later than the default `expiryMillis`.
 
 ### `isAbuser(req: Request)`
 
