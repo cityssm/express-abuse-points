@@ -1,3 +1,4 @@
+/* eslint-disable node-test/no-async-describe */
 import assert from 'node:assert'
 import { describe, it } from 'node:test'
 

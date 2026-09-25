@@ -1,12 +1,14 @@
+/* eslint-disable unicorn/no-top-level-assignment-in-function */
+import { DatabaseSync } from 'node:sqlite'
+
 import { minutesToMillis } from '@cityssm/to-millis'
-import sqlite from 'better-sqlite3'
 import exitHook from 'exit-hook'
 import type express from 'express'
 
 import { getIP, getXForwardedFor } from './trackingValues.js'
 import type { AbuseCheckOptions } from './types.js'
 
-const OPTIONS_DEFAULT: AbuseCheckOptions = {
+const OPTIONS_DEFAULT: AbuseCheckOptions = Object.freeze({
   byIP: true,
   byXForwardedFor: false,
 
@@ -17,9 +19,7 @@ const OPTIONS_DEFAULT: AbuseCheckOptions = {
 
   clearIntervalMillis: minutesToMillis(60),
   expiryMillis: minutesToMillis(5)
-}
-
-Object.freeze(OPTIONS_DEFAULT)
+})
 
 type TableName = 'AbusePoints_IP' | 'AbusePoints_XForwardedFor'
 
@@ -33,7 +33,7 @@ const tableColumnsInsert = '(trackingValue, expiryTimeMillis, abusePoints)'
 
 let options: AbuseCheckOptions = OPTIONS_DEFAULT
 
-let database: sqlite.Database | undefined
+let database: DatabaseSync | undefined
 
 let clearAbuseIntervalFunction: NodeJS.Timeout | undefined
 
@@ -63,7 +63,7 @@ function initializeDatabase(): void {
     return
   }
 
-  database = sqlite(':memory:')
+  database = new DatabaseSync(':memory:')
 
   database
     .prepare(`CREATE TABLE IF NOT EXISTS ${tableNameIP} ${tableColumnsCreate}`)
@@ -103,7 +103,7 @@ export function initialize(
 }
 
 function clearExpiredAbuse(): void {
-  if (options.byIP && database !== undefined) {
+  if (database !== undefined && options.byIP) {
     database
       // eslint-disable-next-line sqlite-security/no-unsafe-query
       .prepare(/* sql */ `
@@ -114,7 +114,7 @@ function clearExpiredAbuse(): void {
       .run(Date.now())
   }
 
-  if (options.byXForwardedFor && database !== undefined) {
+  if (database !== undefined && options.byXForwardedFor) {
     database
       // eslint-disable-next-line sqlite-security/no-unsafe-query
       .prepare(/* sql */ `
@@ -128,7 +128,7 @@ function clearExpiredAbuse(): void {
 
 function getAbusePoints(tableName: TableName, trackingValue: string): number {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-  const points = database
+  const pointResult = database
     // eslint-disable-next-line sqlite-security/no-unsafe-query
     ?.prepare(/* sql */ `
       SELECT
@@ -139,10 +139,9 @@ function getAbusePoints(tableName: TableName, trackingValue: string): number {
         trackingValue = ?
         AND expiryTimeMillis > ?
     `)
-    .pluck()
-    .get(trackingValue, Date.now()) as number | undefined
+    .get(trackingValue, Date.now()) as { abusePointsSum: number } | undefined
 
-  return points ?? 0
+  return pointResult?.abusePointsSum ?? 0
 }
 
 function clearAbusePoints(tableName: TableName, trackingValue: string): void {
@@ -169,6 +168,7 @@ export function clearAbuse(request: Partial<express.Request>): void {
     }
   }
 
+  // eslint-disable-next-line unicorn/prefer-early-return
   if (options.byXForwardedFor) {
     const ipAddress = getXForwardedFor(request)
 
@@ -240,6 +240,7 @@ export function recordAbuse(
     }
   }
 
+  // eslint-disable-next-line unicorn/prefer-early-return
   if (options.byXForwardedFor) {
     const ipAddress = getXForwardedFor(request)
 

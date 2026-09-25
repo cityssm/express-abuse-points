@@ -1,8 +1,9 @@
+/* eslint-disable unicorn/no-top-level-assignment-in-function */
+import { DatabaseSync } from 'node:sqlite';
 import { minutesToMillis } from '@cityssm/to-millis';
-import sqlite from 'better-sqlite3';
 import exitHook from 'exit-hook';
 import { getIP, getXForwardedFor } from './trackingValues.js';
-const OPTIONS_DEFAULT = {
+const OPTIONS_DEFAULT = Object.freeze({
     byIP: true,
     byXForwardedFor: false,
     abuseMessageText: 'Access temporarily restricted.',
@@ -10,8 +11,7 @@ const OPTIONS_DEFAULT = {
     abusePointsMax: 10,
     clearIntervalMillis: minutesToMillis(60),
     expiryMillis: minutesToMillis(5)
-};
-Object.freeze(OPTIONS_DEFAULT);
+});
 const tableNameIP = 'AbusePoints_IP';
 const tableNameXForwardedFor = 'AbusePoints_XForwardedFor';
 const tableColumnsCreate = 
@@ -45,7 +45,7 @@ function initializeDatabase() {
     if (database !== undefined) {
         return;
     }
-    database = sqlite(':memory:');
+    database = new DatabaseSync(':memory:');
     database
         .prepare(`CREATE TABLE IF NOT EXISTS ${tableNameIP} ${tableColumnsCreate}`)
         .run();
@@ -70,7 +70,7 @@ export function initialize(optionsUser) {
     return abuseCheckHandler;
 }
 function clearExpiredAbuse() {
-    if (options.byIP && database !== undefined) {
+    if (database !== undefined && options.byIP) {
         database
             // eslint-disable-next-line sqlite-security/no-unsafe-query
             .prepare(/* sql */ `
@@ -80,7 +80,7 @@ function clearExpiredAbuse() {
       `)
             .run(Date.now());
     }
-    if (options.byXForwardedFor && database !== undefined) {
+    if (database !== undefined && options.byXForwardedFor) {
         database
             // eslint-disable-next-line sqlite-security/no-unsafe-query
             .prepare(/* sql */ `
@@ -93,7 +93,7 @@ function clearExpiredAbuse() {
 }
 function getAbusePoints(tableName, trackingValue) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    const points = database
+    const pointResult = database
         // eslint-disable-next-line sqlite-security/no-unsafe-query
         ?.prepare(/* sql */ `
       SELECT
@@ -104,9 +104,8 @@ function getAbusePoints(tableName, trackingValue) {
         trackingValue = ?
         AND expiryTimeMillis > ?
     `)
-        .pluck()
         .get(trackingValue, Date.now());
-    return points ?? 0;
+    return pointResult?.abusePointsSum ?? 0;
 }
 function clearAbusePoints(tableName, trackingValue) {
     database
@@ -129,6 +128,7 @@ export function clearAbuse(request) {
             clearAbusePoints(tableNameIP, ipAddress);
         }
     }
+    // eslint-disable-next-line unicorn/prefer-early-return
     if (options.byXForwardedFor) {
         const ipAddress = getXForwardedFor(request);
         if (ipAddress !== '') {
@@ -184,6 +184,7 @@ export function recordAbuse(request, abusePoints = options.abusePoints, expiryMi
                 .run(ipAddress, expiryTimeMillis, abusePoints);
         }
     }
+    // eslint-disable-next-line unicorn/prefer-early-return
     if (options.byXForwardedFor) {
         const ipAddress = getXForwardedFor(request);
         if (ipAddress !== '') {
