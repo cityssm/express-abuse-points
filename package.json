@@ -31,20 +31,20 @@
     "types.*"
   ],
   "scripts": {
-    "coverage": "c8 node --test",
-    "test": "node --test"
+    "coverage": "c8 node --test \"test/**/*.test.js\"",
+    "test": "node --test \"test/**/*.test.js\""
   },
   "dependencies": {
     "@cityssm/to-millis": "^1.0.1",
     "exit-hook": "^5.1.0",
-    "express": "^5.2.1",
+    "express": "^5.3.0",
     "is-ip": "^5.0.1"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
-    "@types/node": "^26.6.2",
-    "eslint-config-cityssm": "^54.1.0",
-    "prettier-config-cityssm": "^2.2.0"
+    "@types/node": "^26.6.6",
+    "eslint-config-cityssm": "^61.0.0",
+    "prettier-config-cityssm": "^2.3.0"
   },
   "engines": {
     "node": ">=22.0.0"
